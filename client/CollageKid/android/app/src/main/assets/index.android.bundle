@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Error: Unable to resolve module `./index.android` from `/Users/leondewan/Sites/collage-kid-github/client/CollageKid/.`: The module `./index.android` could not be found from `/Users/leondewan/Sites/collage-kid-github/client/CollageKid/.`. Indeed, none of these files exist:<br> &nbsp;* `/Users/leondewan/Sites/collage-kid-github/client/CollageKid/index.android(.native||.android.js|.native.js|.js|.android.json|.native.json|.json|.android.ts|.native.ts|.ts|.android.tsx|.native.tsx|.tsx)`<br> &nbsp;* `/Users/leondewan/Sites/collage-kid-github/client/CollageKid/index.android/index(.native||.android.js|.native.js|.js|.android.json|.native.json|.json|.android.ts|.native.ts|.ts|.android.tsx|.native.tsx|.tsx)`<br> &nbsp; &nbsp;at ModuleResolver.resolveDependency (/Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:163:15)<br> &nbsp; &nbsp;at ResolutionRequest.resolveDependency (/Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/node-haste/DependencyGraph/ResolutionRequest.js:52:18)<br> &nbsp; &nbsp;at DependencyGraph.resolveDependency (/Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/node-haste/DependencyGraph.js:273:16)<br> &nbsp; &nbsp;at /Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/lib/transformHelpers.js:261:42<br> &nbsp; &nbsp;at Server.&lt;anonymous&gt; (/Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/Server.js:935:41)<br> &nbsp; &nbsp;at Generator.next (&lt;anonymous&gt;)<br> &nbsp; &nbsp;at asyncGeneratorStep (/Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/Server.js:73:24)<br> &nbsp; &nbsp;at _next (/Users/leondewan/Sites/collage-kid-github/client/CollageKid/node_modules/metro/src/Server.js:93:9)</pre>
+</body>
+</html>

@@ -1,122 +1,183 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- * @lint-ignore-every XPLATJSCOPYRIGHT1
- */
-// weather api key: b64edf7210dba7a10e45835c89bc5b1c
-//api.openweathermap.org/data/2.5/weather?q=NewYork
-//https://api.darksky.net/forecast/614d1564e2234221557d2f47c650b73d/40.7127,-74.0059`
 
-//40.7127,-74.0059
-
-
-/*
-navigator.geolocation.getCurrentPosition(
-  position => {
-    const location = JSON.stringify(position);
-
-    this.setState({ location });
-  },
-  error => Alert.alert(error.message),
-  { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-);
-*/
-
-//https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDhTcjZOZ4dKdmlPiVzQTC-6gbP7ucd7Ok&sensor=false&address=${encodeURIComponent(new york, ny)}`,
-
-import React, {Component} from 'react';
-import { View, ActivityIndicator, ImageBackground, Button } from 'react-native';
+import React, { Component } from 'react';
+import { View, ActivityIndicator, ImageBackground, AsyncStorage } from 'react-native';
 import firebase from 'firebase';
+
+import Welcome from './Welcome';
 import Video from './Video';
+import Videocam from './Videocam';
+import Camera from './Camera';
 import ImagesSounds from './ImagesSounds';
 import SoundRecording from './SoundRecording';
 import Finalize from './Finalize';
 import Login from './Login';
+
+import { firebaseAuth } from '../crypt';
 import { styles } from './CollageStyles';
 
 export default class App extends Component {
     state = {
         media: [],
-        collageView: 'video',
-        loggedIn: null
+        collageView: '',
+        welcome: true,
+        currVideoLength: 0,
+        loggedIn: null,
+        cycle: 1
     };
 
     componentWillMount() {
+        //const firebase = require('firebase');
+
         firebase.initializeApp({
-            apiKey: "AIzaSyDlPZ-_nZVqjImbHYOjnuBp6cz82rZXoW8",
-            authDomain: "collage-kid.firebaseapp.com",
-            databaseURL: "https://collage-kid.firebaseio.com",
-            projectId: "collage-kid",
-            storageBucket: "collage-kid.appspot.com",
-            messagingSenderId: "66649736149"
+            ...firebaseAuth
         });
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-              this.setState({ loggedIn: true });
-              this.user = user;
+                this.setState({ loggedIn: true });
+                this.user = user;
             } else {
-              this.setState({ loggedIn: false });
+                this.setState({ loggedIn: false });
             }
           });
     }
 
     componentDidMount() {
-        this.startTime = Date.now();
-    }
-    
-    loadMedia = (mediaFile) => {
-        this.setState({media: [...this.state.media, mediaFile]})
-    }
-    
-    switchPage = (page) => {
-        console.log('switching page', page);
-        this.setState({collageView: page})
+        this.allowedCycles = 1;
+        AsyncStorage.getItem('welcome').then(value => {
+           if (value === 'true' || value === null) {
+                AsyncStorage.setItem('welcome', 'false');
+                this.switchPage('welcome');
+           } else {
+               this.switchPage('video');
+           }
+       });
     }
 
-    navigate = (page) => {
-        switch(page) {
-            case 'video':
-                return <Video loadMedia={this.loadMedia} 
-                    switchPage={this.switchPage} />;
-            case 'imagessounds':
-                return <ImagesSounds loadMedia={this.loadMedia} 
-                    switchPage={this.switchPage}
-                    setSoundFileName={this.setSoundFileName} />;
-                    
-            case 'soundrecording':
-                return <SoundRecording loadMedia={this.loadMedia} 
-                    switchPage={this.switchPage} />;
-            case  'finalize':
-                return <Finalize media={this.state.media} 
-                    user={this.user}
-                    startTime={this.startTime} />;
-            default: 
-                return <Video loadMedia={this.loadMedia}  
-                switchPage={this.switchPage} />;
-        }
+    setWelcome = (val) => {
+        AsyncStorage.setItem('welcome', val);
     }
 
     setLogin = (loggedIn) => this.setState({ loggedIn });
 
+    signOut = () => {
+        this.reset();
+        firebase.auth().signOut().then(() => {
+            this.switchPage('welcome');
+            this.setWelcome('true');
+        });
+    }
+
+    incrementCycle = () => {
+        this.setState({ cycle: this.state.cycle + 1 });
+    }
+
+    loadMedia = (mediaFile) => {
+        this.setState({ media: [...this.state.media, mediaFile] });
+    }
+
+    unloadMedia = () => {
+        this.setState({ media: [] });
+    }
+
+    loadCurrVideoLength = (currVideoLength) => {
+        this.setState({
+            currVideoLength: this.state.currVideoLength + currVideoLength
+        });
+    }
+
+    switchPage = (page) => {
+        this.setState({ collageView: page });
+    }
+
+    reset = () => {
+        this.setState({ currVideoLength: 0 });
+        this.navigationHistory = [];
+        this.setState({ cycle: 1 });
+        this.unloadMedia();
+    }
+
+    navigate = (page) => {
+        if (page !== 'welcome') {
+            this.navigationHistory = [...this.navigationHistory || [], page];
+        }
+
+        switch (page) {
+            case 'welcome':
+                return <Welcome switchPage={this.switchPage} />;
+            case 'video':
+                return (<Video
+                    loadMedia={this.loadMedia}
+                    switchPage={this.switchPage}
+                    navigationHistory={this.navigationHistory}
+                    currVideoLength={this.state.currVideoLength}
+                    signOut={this.signOut}
+                />);
+            case 'videocam' :
+                return (<Videocam
+                    loadMedia={this.loadMedia}
+                    loadCurrVideoLength={this.loadCurrVideoLength}
+                    currVideoLength={this.state.currVideoLength}
+                    switchPage={this.switchPage}
+                />);
+            case 'imagessounds':
+                return (<ImagesSounds
+                    loadMedia={this.loadMedia}
+                    switchPage={this.switchPage}
+                    setSoundFileName={this.setSoundFileName}
+                />);
+            case 'camera':
+                return (<Camera
+                    loadMedia={this.loadMedia}
+                    switchPage={this.switchPage}
+                />);
+
+            case 'soundrecording':
+                return (<SoundRecording
+                    loadMedia={this.loadMedia}
+                    switchPage={this.switchPage}
+                />);
+            case 'finalize':
+                return (<Finalize
+                    media={this.state.media}
+                    user={this.user}
+                    reset={this.reset}
+                    switchPage={this.switchPage}
+                    cycle={this.state.cycle}
+                    incrementCycle={this.incrementCycle}
+                    allowedCycles={this.allowedCycles}
+                    setWelcome={this.setWelcome}
+                    signOut={this.signOut}
+                />);
+            default:
+                return (<Video
+                    loadMedia={this.loadMedia}
+                    switchPage={this.switchPage}
+                />);
+        }
+    }
+
     displayContent = () => {
-        switch(this.state.loggedIn) {
+        switch (this.state.loggedIn) {
             case true:
                 return this.navigate(this.state.collageView);
             case false:
-                return  <Login setLogin={this.setLogin} />;
+                return (<Login
+                    setLogin={this.setLogin}
+                    reset={this.reset}
+                    initPage={this.state.collageView}
+                />);
             default:
                 return (
-                <ImageBackground style={{width: '100%', height: '100%'}}
-                    source={require('../img/collageart.png')}> 
+                <ImageBackground
+                    style={{ width: '100%', height: '100%' }}
+                    source={require('../img/collageart_splash4.jpg')}
+                >
                     <View style={styles.fullCenteredView}>
                         <ActivityIndicator size='large' />
                     </View>
-                </ImageBackground> 
-                ) 
+                </ImageBackground>
+            );
         }
     }
 

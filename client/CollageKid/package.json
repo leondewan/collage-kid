@@ -10,15 +10,26 @@
     "firebase": "^5.8.4",
     "react": "16.6.3",
     "react-native": "^0.58.5",
-    "react-native-image-picker": "^0.28.0",
+    "react-native-camera": "^1.12.0",
+    "react-native-fs": "^2.13.3",
     "react-native-keyboard-spacer": "^0.4.1",
+    "react-native-linear-gradient": "^2.5.3",
     "react-native-media-meta": "0.0.10",
+    "react-native-radial-gradient": "^1.0.5",
+    "react-native-slider": "^0.11.0",
     "react-native-sound-level": "^1.1.0",
-    "react-native-sound-recorder": "^1.3.2"
+    "react-native-sound-recorder": "^1.3.2",
+    "react-native-vector-icons": "^6.3.0"
+  },
+  "rnpm": {
+    "assets": [
+      "./src/fonts"
+    ]
   },
   "devDependencies": {
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "24.1.0",
+    "eslint-config-rallycoding": "^3.2.0",
     "jest": "24.1.0",
     "metro-react-native-babel-preset": "0.52.0",
     "react-test-renderer": "16.6.3"

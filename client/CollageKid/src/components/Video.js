@@ -1,98 +1,128 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- * @lint-ignore-every XPLATJSCOPYRIGHT1
- */
-// weather api key: b64edf7210dba7a10e45835c89bc5b1c
-//api.openweathermap.org/data/2.5/weather?q=NewYork
-//https://api.darksky.net/forecast/614d1564e2234221557d2f47c650b73d/40.7127,-74.0059`
+import React, { Component } from 'react';
+import { Dimensions, Text, TouchableOpacity, View } from 'react-native';
 
-//40.7127,-74.0059
-
-
-/*
-navigator.geolocation.getCurrentPosition(
-  position => {
-    const location = JSON.stringify(position);
-
-    this.setState({ location });
-  },
-  error => Alert.alert(error.message),
-  { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-);
-*/
-
-//https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDhTcjZOZ4dKdmlPiVzQTC-6gbP7ucd7Ok&sensor=false&address=${encodeURIComponent(new york, ny)}`,
-
-import React, {Component} from 'react';
-import {Dimensions, Image, StatusBar, Text,  TouchableOpacity, View, Button} from 'react-native';
+import RadialGradient from 'react-native-radial-gradient';
+import LinearGradient from 'react-native-linear-gradient';
 
 import CollageFadeTransition from './CollageFadeTransition';
+import Header from './Header';
 import { styles } from './CollageStyles';
-import ShootVideo from './ShootVideo';
 
-// import TakePhoto from './TakePhoto'
-// import RecordSound from './RecordSound';
+class Video extends Component {
+    state = { currVideoLength: this.props.currVideoLength || 0 }
 
-export default class Video extends Component {
-    state = { currVideoLength: 0 }
-
-    loadCurrVideoLength = (currVideoLength) => {
-        this.setState({currVideoLength: this.state.currVideoLength + currVideoLength});
-    }
-
-    videoLengthStatement = () => {
-        console.log('statement:', this.state.currVideoLength)
-        if(this.state.currVideoLength && this.state.currVideoLength <= 3){
-            console.log('returning statemtent');
-            return <Text style={{marginTop: 40, paddingLeft:40, paddingRight:40}}>You have captured under 3 minutes of video so far - you will need at least 3 minutes total in order to proceed.</Text>;
-        } else {
-            return null;
+    componentDidUpdate(oldProps) {
+        const newProps = this.props;
+        if (oldProps.currVideoLength !== newProps.currVideoLength) {
+            this.loadCurrVideoLength(newProps.currVideoLength);
+        }
+        if (oldProps.navigationHistory !== newProps.navigationHistory) {
+            this.props.navigationHistory = newProps.navigationHistory;
         }
     }
 
-    proceed = () => {
-    return this.state.currVideoLength > .01 ? (
-            <Button onPress={() => this.props.switchPage('imagessounds')}
-                title = "Next >>"
-            />
-        ): <View style={{height: 40, alignItems: 'center', justifyContent: 'center'}}><Text style={{color: '#fff', fontSize:18}}>Shoot time: {this.state.currVideoLength}</Text></View>
+    loadCurrVideoLength = (currVideoLength) => {
+        this.setState({
+            currVideoLength
+        });
     }
-    
+
+    renderBottomNav = () => {
+        const navHistory = this.props.navigationHistory;
+        if (!navHistory.every((val) => val === 'video' || val === 'videocam')) {
+            return (
+                <View style={styles.navContainer}>
+                    <TouchableOpacity
+                        onPress={() => this.props.switchPage('imagessounds')}
+                    >
+                        <Text style={styles.navText}> &lt; More Images/Sounds </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => this.props.switchPage('finalize')}
+                    >
+                        <Text style={styles.navText}> Finalize &gt; </Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        } else if (navHistory.length > 1 || navHistory.lenth === 0) {
+            return (
+                <View style={{ ...styles.navContainer, justifyContent: 'center' }}>
+                    <TouchableOpacity
+                        onPress={() => this.props.switchPage('imagessounds')}
+                    >
+                        <Text style={styles.navText}> Proceed &gt; </Text>
+                    </ TouchableOpacity>
+                </View>
+            );
+        }
+        return (
+            <View style={{ ...styles.navContainer, justifyContent: 'center' }}>
+                <TouchableOpacity
+                    onPress={this.props.signOut}
+                    disabled={this.state.finalizing}
+                    style={{ width: 125 }}
+                >
+                    <Text
+                        style={styles.navText}
+                    >
+                        &lt;&lt; Sign out
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
     render() {
-        return(
-            
-            <CollageFadeTransition style={{flex: 1}}>
-                <View>
-                    <StatusBar backgroundColor="blue" barStyle="light-content"/>
-                </View>
-                <View style={styles.header}>
-                    <Image  
-                        source={require('../img/collageart7.png')}
-                        style={styles.headerImage}
-                    />
-                </View>
-                <View style={styles.container}>
-                    <View style={styles.instructionsContainer}>
-                        <Text style={styles.instructions}>
-                            Take this opportunity to document what you're thinking about and what is around you.
-                        </Text>
-                        {this.videoLengthStatement()}
+        return (
+            <CollageFadeTransition style={{ flex: 1 }}>
+                <Header />
+                <RadialGradient
+                    style={{ flex: 1, alignSelf: 'stretch' }}
+                    colors={['#01305b', '#000']}
+                    stops={[0.3, 1]}
+                    radius={win.width}
+                >
+                    <View style={styles.container}>
+                        <View style={styles.instructionsContainer}>
+                            <Text style={styles.instructions}>
+                                Take this opportunity to document what you're thinking about
+                                and what is happening around you.
+                            </Text>
+                            <Text
+                                style={{ ...styles.instructions,
+                                    fontSize: 16,
+                                    paddingTop: 30,
+                                    paddingLeft: 50,
+                                    paddingRight: 50
+                                }}
+                            >
+                                Please note the maximum total video length
+                                of 6 minutes per submission.
+                            </Text>
                         </View>
-                    <ShootVideo loadMedia={this.props.loadMedia}
-                        loadCurrVideoLength={this.loadCurrVideoLength}/>
-                        
-                </View>
-                {this.proceed()}
-            </CollageFadeTransition>  
+                        <LinearGradient
+                            colors={['#4167db', '#3b5998', '#01305b']}
+                            style={{
+                                borderRadius: 5,
+                                borderColor: '#01305b',
+                                borderWidth: 2
+                            }}
+                        >
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={() => this.props.switchPage('videocam')}
+                            >
+                                <Text style={styles.buttonText}>Capture Video</Text>
+                            </TouchableOpacity>
+                        </LinearGradient>
+                    </View>
+                </RadialGradient>
+                { this.renderBottomNav() }
+            </CollageFadeTransition>
         );
    }
 }
 
 const win = Dimensions.get('window');
-
-
-
+export default Video;

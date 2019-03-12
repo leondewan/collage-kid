@@ -3,10 +3,14 @@ package com.collagekid;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.rnfs.RNFSPackage;
+import com.BV.LinearGradient.LinearGradientPackage;
+import com.surajit.rnrg.RNRadialGradientPackage;
+import com.oblador.vectoricons.VectorIconsPackage;
+import org.reactnative.camera.RNCameraPackage;
 import com.kevinresol.react_native_sound_recorder.RNSoundRecorderPackage;
 import com.punarinta.RNSoundLevel.RNSoundLevel;
 import com.mybigday.rnmediameta.RNMediaMetaPackage;
-import com.imagepicker.ImagePickerPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -27,10 +31,14 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNFSPackage(),
+            new LinearGradientPackage(),
+            new RNRadialGradientPackage(),
+            new VectorIconsPackage(),
+            new RNCameraPackage(),
             new RNSoundRecorderPackage(),
             new RNSoundLevel(),
-            new RNMediaMetaPackage(),
-            new ImagePickerPackage()
+            new RNMediaMetaPackage()
       );
     }
 
