@@ -152,7 +152,7 @@ exports.removeAudio = (ffmpeg, info) => {
 
 }
 
-exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo) => {
+exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo, ws) => {
     return new Promise((resolve, reject) => {
         var rawImageTimes = EDL[1];
         var imageList = EDL[2];
@@ -372,11 +372,26 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo)
                 Promise.all(imageCutsHolder.map((cut, index) => cut(index)))
                     .then((result) => appendImageCuts(result))
                     .then(() => concatAudio())
-                    .then(() => Promise.all(videoCutsHolder.map((cut, index) => cut(index))))
+                    .then(() => {
+                        ws.send(JSON.stringify({
+                            status: 'wait'
+                        }));
+                        return Promise.all(videoCutsHolder.map((cut, index) => cut(index)))
+                    })
                     .then((result)=> assembleVideoClips(result))
-                    .then(() => Promise.all(audioCutsHolder.map((cut, index) => cut(index))))
+                    .then(() => {
+                        ws.send(JSON.stringify({
+                            status: 'wait'
+                        }));
+                        return Promise.all(audioCutsHolder.map((cut, index) => cut(index)))
+                    })
                     .then((result)=> assembleAudioClips(result))
-                    .then(() => assembleFinalVideo())
+                    .then(() => {
+                        ws.send(JSON.stringify({
+                            status: 'wait'
+                        }));
+                        return assembleFinalVideo()
+                    })
                     .then((finalVideo) => {
                         console.log('final video assembled');
                         resolve(finalVideo);
@@ -406,7 +421,7 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo)
 
 
         const cleanup = () => {
-            deleteFolderRecursive(mediaFilePath);
+            //deleteFolderRecursive(mediaFilePath);
             console.log('cleanup complete')
 
         }

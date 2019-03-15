@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Text, TouchableOpacity, View, Dimensions, StatusBar, Platform } from 'react-native';
 import { RNCamera } from 'react-native-camera';
-import MediaMeta from 'react-native-media-meta';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { styles } from './CollageStyles';
@@ -23,6 +22,12 @@ class Videocam extends Component {
             this.setState({ maxTime: true });
         }
     }
+    componentDidMount() {
+        if (!this.props.startTime) {
+            this.props.setStartTime(Date.now());
+        }
+    }
+
     componentDidUpdate(oldProps) {
         const newProps = this.props;
         if (oldProps.currVideoLength !== newProps.currVideoLength) {
@@ -49,6 +54,7 @@ class Videocam extends Component {
                 }
             }, 1000);
         } else {
+            this.props.loadCurrVideoLength(this.state.runtime);
             clearInterval(this.timer);
         }
     }
@@ -63,16 +69,11 @@ class Videocam extends Component {
                 forceUpOrientation: true
             };
             const data = await this.camera.recordAsync(options);
+            this.setState({ recording: false });
             const path = Platform.OS === 'android' ? data.uri.replace('file://', '') : data.uri.replace('file://', '');
             const fileNameIndex = path.lastIndexOf('/') + 1;
             const fileName = path.substr(fileNameIndex);
 
-            MediaMeta.get(path)
-                .then(metadata => {
-                    this.props.loadCurrVideoLength(metadata.duration / 1000);
-                    this.setState({ recording: false });
-                })
-                .catch(err => console.error(err));
 
             this.props.loadMedia({
                 uri: data.uri,

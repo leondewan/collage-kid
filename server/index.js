@@ -3,13 +3,28 @@ const multer = require('multer');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const axios = require('axios');
+const http = require('http');
+const WebSocket = require('ws');
 const SpookyMath = require('./SpookyMath');
 const editor = require('./editor');
 const crypt = require('./crypt')
+var port = 3001;
+const app = express();
+
+let WSServer = require('ws').Server;
+let server = require('http').createServer();
+let wss = new WSServer({
+    server: server
+});
+
+server.listen(port, function() {
+
+  console.log(`http/ws server listening on ${port}`);
+});
 
 const globalTerrestrialArray = [319.08, 130, 7340.09, 25261.08, 1126.50, 166.90, 1594.24];
 
-const app = express();
+
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -26,7 +41,7 @@ const Storage = multer.diskStorage({
     }
 });
 
-function editMedia(req){
+function editMedia(req, ws){
     const ffmpeg = require('fluent-ffmpeg');
     mediaFilePath = __dirname + '/media/' + req.headers.userid + '/' + req.headers.starttime;
     let spookyMath = new SpookyMath();
@@ -114,7 +129,6 @@ function editMedia(req){
         ];
 
         return heavenlyArray;
-
     }
 
     const sendEmail = (terrestrialArray, heavenlyArray, nearestStormDistance) => {
@@ -220,13 +234,22 @@ function editMedia(req){
             editor.concatMedia().concatSounds(ffmpeg, result.path)
         ]
     ))
-    .then( info => {
+    .then(info => {
+        ws.send(JSON.stringify({
+            status: 'wait'
+        }));
         return Promise.all([editor.extractAudio(ffmpeg, info), editor.removeAudio(ffmpeg, info)]);
     })
     .then(info => {
+        ws.send(JSON.stringify({
+            status: 'wait'
+        }));
         return getTrackDurations(ffmpeg, info[0]);
     })
     .then(durationInfo => {
+        ws.send(JSON.stringify({
+            status: 'wait'
+        }));
         var mediaInfo = {};
         var heavenlyArray = [];
         var EDLdata = {}
@@ -239,6 +262,9 @@ function editMedia(req){
         return { EDLdata: EDLdata, path: durationInfo[0].path}
     })
     .then((info) => {
+        ws.send(JSON.stringify({
+            status: 'wait'
+        }));
         var terrestrialArray = [];
         var nearestStormDistance = false;
         return getTerrestrialData(
@@ -250,6 +276,9 @@ function editMedia(req){
         )
     })
     .then((info) => {
+        ws.send(JSON.stringify({
+            status: 'wait'
+        }));
         for(let i=0; i< info.terrestrialArray.length; i++) {
             if (!info.terrestrialArray) {
                 info.terrestrialArray[i] = globalTerrestrialArray[i];
@@ -272,11 +301,21 @@ function editMedia(req){
             [...EDL, info.info.EDLdata.mediaInfo.imageNames],
             info.info.path,
             mediaFilePathFinal,
-            emailData
+            emailData,
+            ws
         );
     })
     .then((info)  => {
+        ws.send(JSON.stringify({
+            status: 'wait'
+        }));
+        console.log(ws);
+        console.log(`${req.headers.host}/download?userid=${req.headers.userid}&starttime=${req.headers.starttime}`);
         sendEmail(info.emailInfo.terrestrial, info.emailInfo.heavenly, info.emailInfo.nearestStormDistance);
+        ws.send(JSON.stringify({
+            status: 'go',
+            url: `${req.headers.host}/download?userid=${req.headers.userid}&starttime=${req.headers.starttime}`
+        }));
     })
     .catch((error) => console.log('error:', error));
 }
@@ -303,20 +342,30 @@ app.get('/download', (req, res) => {
     res.download(file);
 })
 
-app.get('/api/edit', (req, res) => {
-    console.log('edit request headers:', req.headers)
-    editMedia(req);
-    res.status(200).json({
-        message: 'called editor!'
-    })
-})
-
 app.get('/api', (req, res) => {
     res.status(200).json({
         message: 'welcome to collage server'
     })
 })
 
-var port = 3001;
 
-app.listen(port, () => console.log(`listening on port ${port}`))
+server.on('request', app);
+
+wss.on('connection', function connection(ws) {
+    ws.on('message', function incoming(message) {
+        console.log(`received: ${message}`);
+        const editData = JSON.parse(message);
+
+        if (editData.type==='edit') {
+            editMedia(editData, ws);
+        }
+
+    ws.send(JSON.stringify({
+        status: 'wait'
+    }));
+  });
+});
+
+
+
+//app.listen(port, () => console.log(`listening on port ${port}`))

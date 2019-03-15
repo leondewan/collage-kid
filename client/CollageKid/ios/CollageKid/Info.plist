@@ -42,7 +42,7 @@
 	<key>NSLocationUsageDescription</key>
 	<string>You will need to provide your location in order to proceed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Collage Kid would like to use your microphone so that your collage can have sound.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

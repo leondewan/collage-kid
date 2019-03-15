@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { View, ActivityIndicator, ImageBackground, AsyncStorage } from 'react-native';
+import { View, ActivityIndicator, ImageBackground, AsyncStorage, Platform } from 'react-native';
 import firebase from 'firebase';
 
 import Welcome from './Welcome';
@@ -22,7 +22,9 @@ export default class App extends Component {
         welcome: true,
         currVideoLength: 0,
         loggedIn: null,
-        cycle: 1
+        cycle: 1,
+        startTime: 0,
+        uploading: false
     };
 
     componentWillMount() {
@@ -43,7 +45,10 @@ export default class App extends Component {
     }
 
     componentDidMount() {
+        this.host = '192.168.1.3:3001';
+        //this.host = 'collagekid.com/collageserver/'
         this.allowedCycles = 1;
+
         AsyncStorage.getItem('welcome').then(value => {
            if (value === 'true' || value === null) {
                 AsyncStorage.setItem('welcome', 'false');
@@ -60,6 +65,10 @@ export default class App extends Component {
 
     setLogin = (loggedIn) => this.setState({ loggedIn });
 
+    setStartTime = (startTime) => {
+        this.setState({ startTime });
+    }
+
     signOut = () => {
         this.reset();
         firebase.auth().signOut().then(() => {
@@ -72,8 +81,38 @@ export default class App extends Component {
         this.setState({ cycle: this.state.cycle + 1 });
     }
 
-    loadMedia = (mediaFile) => {
-        this.setState({ media: [...this.state.media, mediaFile] });
+    loadMedia = (mediaItem) => {
+        this.setState({ media: [...this.state.media, mediaItem] });
+        this.setState({ uploading: true });
+        console.log('setstate uploading true app.js');
+
+        const data = new FormData();
+
+        data.append('media', {
+            name: mediaItem.fileName,
+            uri: Platform.OS === 'android' ? mediaItem.uri : mediaItem.uri.replace('file://', '')
+        });
+        const body = data;
+        const headers = {
+            mediatype: mediaItem.type,
+            userid: this.user.uid,
+            startTime: this.state.startTime
+        };
+
+        const fetchURL = `http://${this.host}/api/upload`;
+
+        fetch(fetchURL, {
+            method: 'POST',
+            headers,
+            body
+        }).then(response => {
+            this.setState({ uploading: false });
+            if (!response.ok) {
+                console.log('bad connection');
+            }
+        }).catch(error => {
+            console.log('upload error', error);
+        });
     }
 
     unloadMedia = () => {
@@ -119,6 +158,8 @@ export default class App extends Component {
                     loadCurrVideoLength={this.loadCurrVideoLength}
                     currVideoLength={this.state.currVideoLength}
                     switchPage={this.switchPage}
+                    setStartTime={this.setStartTime}
+                    startTime={this.state.startTime}
                 />);
             case 'imagessounds':
                 return (<ImagesSounds
@@ -143,11 +184,14 @@ export default class App extends Component {
                     user={this.user}
                     reset={this.reset}
                     switchPage={this.switchPage}
+                    startTime={this.state.startTime}
                     cycle={this.state.cycle}
                     incrementCycle={this.incrementCycle}
                     allowedCycles={this.allowedCycles}
                     setWelcome={this.setWelcome}
                     signOut={this.signOut}
+                    uploading={this.state.uploading}
+                    host={this.host}
                 />);
             default:
                 return (<Video

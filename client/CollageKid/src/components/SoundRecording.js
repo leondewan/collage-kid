@@ -34,18 +34,18 @@ export default class SoundRecording extends Component {
     handleRecordStart = () => {
         this.setState({ recording: true });
         this.runTimer(true);
-        // RNSoundLevel.start();
-        // RNSoundLevel.onNewFrame = (data) => {
-        //     this.setState({ soundLevel: (parseInt(data.value)) + 60 > 0
-        //         ? parseInt(data.value) + 60 : 2 });
-        // };
+        RNSoundLevel.start();
+        RNSoundLevel.onNewFrame = (data) => {
+            this.setState({ soundLevel: (parseInt(data.value)) + 60 > 0
+                ? parseInt(data.value) + 60 : 2 });
+        };
         this.soundFileName = `sound_${Date.now()}.mp4`;
         SoundRecorder.start(`${SoundRecorder.PATH_CACHE}/SoundRecorder/${this.soundFileName}`);
     }
 
     handleRecordStop = () => {
         this.setState({ recording: false });
-        //RNSoundLevel.stop();
+        RNSoundLevel.stop();
         SoundRecorder.stop()
             .then((result) => {
                 this.runTimer(false);
