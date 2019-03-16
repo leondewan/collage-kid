@@ -48,7 +48,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Collage Kid will need to add your footage and photos to your camera roll.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Collage kid would like to use your photo library so you can create your collage.</string>
+	<string>Collage kid would like to use your photo library so you can create enhance your piece.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>

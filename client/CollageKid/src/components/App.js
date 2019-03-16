@@ -7,6 +7,7 @@ import Welcome from './Welcome';
 import Video from './Video';
 import Videocam from './Videocam';
 import Camera from './Camera';
+import CameraRollViewer from './CameraRollViewer';
 import ImagesSounds from './ImagesSounds';
 import SoundRecording from './SoundRecording';
 import Finalize from './Finalize';
@@ -92,6 +93,7 @@ export default class App extends Component {
             name: mediaItem.fileName,
             uri: Platform.OS === 'android' ? mediaItem.uri : mediaItem.uri.replace('file://', '')
         });
+        console.log('media object', data);
         const body = data;
         const headers = {
             mediatype: mediaItem.type,
@@ -107,6 +109,7 @@ export default class App extends Component {
             body
         }).then(response => {
             this.setState({ uploading: false });
+            console.log('upload response', response);
             if (!response.ok) {
                 console.log('bad connection');
             }
@@ -150,6 +153,8 @@ export default class App extends Component {
                     switchPage={this.switchPage}
                     navigationHistory={this.navigationHistory}
                     currVideoLength={this.state.currVideoLength}
+                    setStartTime={this.setStartTime}
+                    startTime={this.state.startTime}
                     signOut={this.signOut}
                 />);
             case 'videocam' :
@@ -172,6 +177,11 @@ export default class App extends Component {
                     loadMedia={this.loadMedia}
                     switchPage={this.switchPage}
                 />);
+            case 'camerarollviewer':
+                    return (<CameraRollViewer
+                        loadMedia={this.loadMedia}
+                        switchPage={this.switchPage}
+                    />);
 
             case 'soundrecording':
                 return (<SoundRecording
@@ -192,6 +202,7 @@ export default class App extends Component {
                     signOut={this.signOut}
                     uploading={this.state.uploading}
                     host={this.host}
+                    loadMedia={this.loadMedia}
                 />);
             default:
                 return (<Video

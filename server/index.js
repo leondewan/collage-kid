@@ -32,11 +32,13 @@ app.use(bodyParser.urlencoded({
 
 const Storage = multer.diskStorage({
     destination(req, file, callback) {
+            console.log('file', file);
             fs.mkdirSync('./media/' + req.headers.userid + '/' + req.headers.starttime + '/' + req.headers.mediatype + '/', {recursive: true}, err => {});
             callback(null, './media/' + req.headers.userid  + '/' + req.headers.starttime +  '/' + req.headers.mediatype);
 
     },
     filename(req, file, callback) {
+        console.log('multer callback', `${file.fieldname}_${Date.now()}_${file.originalname}`);
         callback(null, `${file.fieldname}_${Date.now()}_${file.originalname}`);
     }
 });
@@ -311,7 +313,7 @@ function editMedia(req, ws){
         }));
         console.log(ws);
         console.log(`${req.headers.host}/download?userid=${req.headers.userid}&starttime=${req.headers.starttime}`);
-        sendEmail(info.emailInfo.terrestrial, info.emailInfo.heavenly, info.emailInfo.nearestStormDistance);
+        //sendEmail(info.emailInfo.terrestrial, info.emailInfo.heavenly, info.emailInfo.nearestStormDistance);
         ws.send(JSON.stringify({
             status: 'go',
             url: `${req.headers.host}/download?userid=${req.headers.userid}&starttime=${req.headers.starttime}`
@@ -328,7 +330,10 @@ const logRequestStart = (req, res, next) => {
 app.use(logRequestStart);
 
 
-const upload = multer({storage: Storage});
+const upload = multer({
+    storage: Storage,
+    limits: { fieldSize: 25 * 1024 * 1024, fileSize: 500 * 1024 * 1024 }
+});
 
 app.post('/api/upload', upload.array('media'), (req, res) => {
     console.log('upload request headers:', req.headers)
@@ -338,8 +343,13 @@ app.post('/api/upload', upload.array('media'), (req, res) => {
 })
 
 app.get('/download', (req, res) => {
-    var file = `${__dirname}/media/${req.query.userid}_final/${req.query.starttime}/finalvideo.mov`;
+    var file = `${__dirname}/media/${req.query.userid}_final/${req.query.starttime}/finalvideo.mp4`;
     res.download(file);
+})
+
+app.get('/delete', (req, res) => {
+    var file = `${__dirname}/media/${req.query.userid}/${req.query.starttime}/${req.query.filename}`;
+    fs.unlinkSync(file);
 })
 
 app.get('/api', (req, res) => {

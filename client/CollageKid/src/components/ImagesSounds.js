@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Text, View, TouchableOpacity, Dimensions } from 'react-native';
 import RadialGradient from 'react-native-radial-gradient';
 import LinearGradient from 'react-native-linear-gradient';
+import ImagePicker from 'react-native-image-crop-picker';
 
 import CollageFadeTransition from './CollageFadeTransition';
 import Header from './Header';
@@ -12,6 +13,10 @@ export default class ImagesSounds extends Component {
         soundFileName: '',
         recording: false
     };
+    //
+    // componentDidMount() {
+    //     console.log('image picker', ImagePicker);
+    // }
 
     setSoundFileName = (soundFileName) => {
         this.setState({ soundFileName });
@@ -19,6 +24,43 @@ export default class ImagesSounds extends Component {
 
     getSoundFileName = () => {
         return this.state.soundFileName;
+    }
+
+    takePhoto = () => {
+        ImagePicker.openCamera({
+            mediaType: 'image'
+        }).then(data => {
+            console.log('photo capture', data);
+            const fileNameIndex = data.path.lastIndexOf('/') + 1;
+            const fileName = data.path.substr(fileNameIndex);
+            this.props.loadMedia({
+                uri: data.path,
+                fileName,
+                type: 'image'
+              }
+            );
+        });
+    }
+
+    openImagePicker = () => {
+        console.log('Image Picker', ImagePicker);
+
+        ImagePicker.openPicker({
+            multiple: true
+            }).then(images => {
+                const media = {};
+                for (let i = 0; i < images.length; i++) {
+                    console.log(images[i]);
+                    media.uri = images[i].sourceURL;
+                    media.fileName = images[i].filename;
+                    if (images[i].mime === 'image/jpeg') {
+                        media.type = 'image';
+                    } else {
+                        media.type = 'video';
+                    }
+                    this.props.loadMedia(media);
+                }
+            });
     }
 
     render() {
@@ -38,7 +80,8 @@ export default class ImagesSounds extends Component {
                             <View style={styles.instructionsContainer}>
                                 <Text style={styles.instructions}>
                                     Don't miss this chance to adorn your work with
-                                    images and sounds from your immediate surroundings.
+                                    images and sounds from your immediate surroundings
+                                    and memory.
                                 </Text>
                             </View>
 
@@ -54,7 +97,8 @@ export default class ImagesSounds extends Component {
 
                                 <TouchableOpacity
                                     style={styles.button}
-                                    onPress={() => this.props.switchPage('camera')}
+                                    //onPress={() => this.props.switchPage('camera')}
+                                    onPress={this.takePhoto}
                                 >
                                     <Text style={styles.buttonText}>Capture Images</Text>
                                 </TouchableOpacity>
@@ -76,6 +120,24 @@ export default class ImagesSounds extends Component {
                                     onPress={() => this.props.switchPage('soundrecording')}
                                 >
                                     <Text style={styles.buttonText}>Record Sound</Text>
+                                </TouchableOpacity>
+                            </LinearGradient>
+
+                            <LinearGradient
+                                colors={['#4167db', '#3b5998', '#01305b']}
+                                style={{
+                                    borderRadius: 5,
+                                    borderColor: '#01305b',
+                                    borderWidth: 2,
+                                    marginTop: 20
+                                }}
+                            >
+
+                                <TouchableOpacity
+                                    style={{ ...styles.button }}
+                                    onPress={this.openImagePicker}
+                                >
+                                    <Text style={styles.buttonText}>Use Memories</Text>
                                 </TouchableOpacity>
                             </LinearGradient>
                         </View>

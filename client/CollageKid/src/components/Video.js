@@ -3,6 +3,7 @@ import { Dimensions, Text, TouchableOpacity, View } from 'react-native';
 
 import RadialGradient from 'react-native-radial-gradient';
 import LinearGradient from 'react-native-linear-gradient';
+import ImagePicker from 'react-native-image-crop-picker';
 
 import CollageFadeTransition from './CollageFadeTransition';
 import Header from './Header';
@@ -10,6 +11,12 @@ import { styles } from './CollageStyles';
 
 class Video extends Component {
     state = { currVideoLength: this.props.currVideoLength || 0 }
+
+    componentDidMount() {
+        if (!this.props.startTime) {
+            this.props.setStartTime(Date.now());
+        }
+    }
 
     componentDidUpdate(oldProps) {
         const newProps = this.props;
@@ -24,6 +31,20 @@ class Video extends Component {
     loadCurrVideoLength = (currVideoLength) => {
         this.setState({
             currVideoLength
+        });
+    }
+
+    takeVideo = () => {
+        ImagePicker.openCamera({
+            mediaType: 'video'
+        }).then(data => {
+            console.log('media capture', data);
+            this.props.loadMedia({
+                uri: data.sourceURL,
+                fileName: data.filename,
+                type: 'video'
+              }
+            );
         });
     }
 
@@ -111,7 +132,8 @@ class Video extends Component {
                         >
                             <TouchableOpacity
                                 style={styles.button}
-                                onPress={() => this.props.switchPage('videocam')}
+                                //onPress={() => this.props.switchPage('videocam')}
+                                onPress={this.takeVideo}
                             >
                                 <Text style={styles.buttonText}>Capture Video</Text>
                             </TouchableOpacity>

@@ -5,12 +5,15 @@ import {
     Text,
     TouchableOpacity,
     Dimensions,
-    PixelRatio
+    PixelRatio,
+    CameraRoll,
+    Share
 } from 'react-native';
 import Slider from 'react-native-slider';
 import RadialGradient from 'react-native-radial-gradient';
 import LinearGradient from 'react-native-linear-gradient';
 import Video from 'react-native-video';
+import RNFetchBlob from 'rn-fetch-blob';
 
 import CollageFadeTransition from './CollageFadeTransition';
 import Header from './Header';
@@ -81,119 +84,98 @@ export default class Finalize extends Component {
         if (this.state.hasError) {
             this.setState({ hasError: false });
         }
-        //this.setState({ finalizing: true });
-        //let createFormData = null;
-        //const host = 'http://192.168.1.3:3001';
-        //const host = 'https://collagekid.com/collageserver/';
 
-        // Promise.all(
-        //     this.props.media.map((mediaItem) => {
-        //         return new Promise((resolve, reject) => {
-        //             createFormData = () => {
-        //                 const data = new FormData();
-        //
-        //                 data.append('media', {
-        //                     name: mediaItem.fileName,
-        //                     uri: Platform.OS === 'android' ? mediaItem.uri : mediaItem.uri.replace('file://', '')
-        //                 });
-        //
-        //                 return data;
-        //             };
-        //             const body = createFormData(mediaItem);
-        //             const headers = {
-        //                 mediatype: mediaItem.type,
-        //                 userid: this.userId,
-        //                 startTime: this.props.startTime
-        //             };
-        //
-        //             const fetchURL = `${host}/api/upload`;
-        //
-        //             fetch(fetchURL, {
-        //                 method: 'POST',
-        //                 headers,
-        //                 body
-        //             }).then(response => {
-        //                 if (!response.ok) {
-        //                     this.setState({ finalizing: false });
-        //                     this.setState({ hasError: true });
-        //                     reject('bad connection');
-        //                     return;
-        //                 }
-        //                 resolve(response.json());
-        //             }).catch(error => {
-        //                 this.setState({ 'upload error': false });
-        //                 this.setState({ hasError: true });
-        //                 reject('error', error);
-        //             });
-        //         });
-        //     })
-        // )
-        // .then(() => RNFS.exists(`${RNFS.CachesDirectoryPath}/SoundRecorder`)
-        //         .then((exists) => {
-        //             if (exists && this.state.done) {
-        //                 RNFS.unlink(`${RNFS.CachesDirectoryPath}/SoundRecorder`);
-        //             }
-        //             return true;
-        //         })
-        // )
-        // .then(() => {
-        //     if (this.state.done) {
-        //         RNFS.unlink(`${RNFS.CachesDirectoryPath}/Camera`);
-        //     }
-        //     return true;
-        // })
-        // .then(() => {
-            const url = `ws://${this.props.host}`;
-            const message = {
-                type: 'edit',
-                headers: {
-                    host: this.props.host,
-                    userid: this.userId,
-                    email: this.email,
-                    latitude: this.state.latitude,
-                    longitude: this.state.longitude,
-                    starttime: this.props.startTime,
-                    duration: this.state.duration,
-                    empirestate: this.empireState
-                }
-            };
+        const url = `ws://${this.props.host}`;
+        const message = {
+            type: 'edit',
+            headers: {
+                host: this.props.host,
+                userid: this.userId,
+                email: this.email,
+                latitude: this.state.latitude,
+                longitude: this.state.longitude,
+                starttime: this.props.startTime,
+                duration: this.state.duration,
+                empirestate: this.empireState
+            }
+        };
 
-            const ws = new WebSocket(url);
+        const ws = new WebSocket(url);
 
-            ws.onopen = () => {
-                ws.send(JSON.stringify(message));
-            };
+        ws.onopen = () => {
+            ws.send(JSON.stringify(message));
+        };
 
-            ws.onmessage = (msg) => {
-                const editorMessage = JSON.parse(msg.data);
-                if (editorMessage.status === 'wait') {
-                    this.setState({ finalizing: true });
-                    this.setState({ progress: this.state.progress + 10 });
-                    console.log('waiting', this.state.progress);
-                } else {
-                    console.log('open video player');
-                    ws.close();
-                    this.videoURI = `http://${editorMessage.url}`;
-                    console.log('video uri', this.videoURI);
-                    this.setState({ finalizing: false });
-                    this.setState({ videoPlayer: true });
-                }
-            };
+        ws.onmessage = (msg) => {
+            const editorMessage = JSON.parse(msg.data);
+            if (editorMessage.status === 'wait') {
+                this.setState({ finalizing: true });
+                this.setState({ progress: this.state.progress + 10 });
+                console.log('waiting', this.state.progress);
+            } else {
+                console.log('open video player');
+                ws.close();
+                this.videoURI = `http://${editorMessage.url}`;
+                console.log('video uri', this.videoURI);
+                this.setState({ finalizing: false });
+                this.setState({ videoPlayer: true });
+            }
+        };
 
-            ws.onerror = (e) => {
-                // an error occurred
-              console.log(e.message);
-            };
+        ws.onerror = (e) => {
+            // an error occurred
+          console.log(e.message);
+        };
 
-            ws.onclose = (e) => {
-              console.log(e.code, e.reason);
-            };
+        ws.onclose = (e) => {
+          console.log(e.code, e.reason);
+        };
     }
 
     handleRepeat = () => {
         this.props.reset();
         this.props.switchPage('video');
     }
+
+    shareFinalVideo = () => {
+        RNFetchBlob
+        .config({
+            fileCache: true,
+            appendExt: 'mp4'
+        })
+        .fetch('GET', this.videoURI)
+        .then((res) => {
+            console.log('blob result', res);
+            Share.share({
+                title: 'My experimental film',
+                message: 'with help from Collage Kid',
+                url: `file://${res.path()}`,
+                type: 'video/mp4',
+                subject: 'My experimental film'
+          });
+      });
+    }
+
+    uploadFinalVideo = () => {
+        RNFetchBlob
+        .config({
+            fileCache: true,
+            appendExt: 'mp4'
+        })
+        .fetch('GET', this.videoURI)
+        .then((res) => {
+            this.props.loadMedia({
+                uri: res.path(),
+                fileName: 'finalvideo.mp4',
+                type: 'video'
+            });
+        });
+    }
+
+    closeFinalVideo = () => {
+        this.setState({ videoPlayer: false });
+    }
+
     render() {
         return (
                 <CollageFadeTransition style={{ flex: 1 }}>
@@ -396,7 +378,41 @@ export default class Finalize extends Component {
                         </View>
                     </RadialGradient>)
                 }
-                    <View style={styles.navContainer}>
+                    { this.state.videoPlayer
+                    ? (<View style={styles.navContainer}>
+                            <TouchableOpacity
+                                onPress={this.shareFinalVideo}
+                                style={{
+                                    width: 125,
+                                    justifyContent: 'center',
+                                    alignItems: 'center' }}
+                            >
+                                <Text style={styles.navText}>Share</Text>
+                            </TouchableOpacity >
+
+                            <TouchableOpacity
+                                onPress={this.uploadFinalVideo}
+                                style={{
+                                    width: 125,
+                                    justifyContent: 'center',
+                                    alignItems: 'center' }}
+                            >
+                                <Text style={styles.navText}>+</Text>
+                            </TouchableOpacity >
+
+                            <TouchableOpacity
+                                onPress={this.closeFinalVideo}
+                                style={{
+                                    width: 125,
+                                    justifyContent: 'center',
+                                    alignItems: 'center' }}
+                            >
+                                <Text style={styles.navText}>Back</Text>
+                            </TouchableOpacity >
+
+                    </View>)
+
+                    : (<View style={styles.navContainer}>
                         <TouchableOpacity
                             onPress={this.props.signOut}
                             style={{ width: 125 }}
@@ -433,7 +449,7 @@ export default class Finalize extends Component {
                             </Text>
                         </TouchableOpacity>
 
-                    </View>
+                    </View>)}
                 </CollageFadeTransition>
         );
     }

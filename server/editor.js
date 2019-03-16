@@ -10,7 +10,9 @@ exports.concatMedia = () => {
                 videoScaleHolder[index] = (index) =>  {
                     return new Promise((resolve, reject) => {
                         ffmpeg(`${mediaFilePath}/video/${videoList[index]}`)
-                            .size('144x192')
+                            .videoFilters('scale=144:-1')
+                            .videoFilters('crop=144:192')
+
                             .on('error', error => {
                                 reject((err) => console.log('individual video scaler error', err));
                             })
@@ -58,8 +60,6 @@ exports.concatMedia = () => {
             });
         }
     }
-
-
 
     var concatVideos = (ffmpeg, media) => {;
         var videoConcat = media.assets;
@@ -180,7 +180,7 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
             imageScaleHolder[index] = (index) =>  {
                 return new Promise((resolve, reject) => {
                     ffmpeg(`${mediaFilePath}/image/${imageList[index]}`)
-                        .size('480x640')
+                        .size('144x192')
                         .on('error', error => {
                             console.log('error', error)
                             reject((err) => console.log('error', err));
@@ -358,10 +358,13 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
               return new Promise((resolve, reject) => {
                 ffmpeg(`${mediaFilePath}/assembledfullvideo.mov`)
                 .addInput(`${mediaFilePath}/assembledfullaudio.mp3`)
-                .save(`${mediaFilePathFinal}/finalvideo.mov`)
+                .size('480x640')
+                .fps(29.96)
+                .videoCodec('libx264')
+                .save(`${mediaFilePathFinal}/finalvideo.mp4`)
                 .on('error', (err) => reject(console.log('assemble final video error', err)))
                 .on('end', () => {
-                    resolve(`${mediaFilePathFinal}finalvideo.mov`);
+                    resolve(`${mediaFilePathFinal}finalvideo.mp4`);
                     console.log('assembly finish from inside assemble');
                 });
             })
