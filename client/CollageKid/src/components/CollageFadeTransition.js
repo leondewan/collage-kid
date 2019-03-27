@@ -20,7 +20,9 @@ class CollageFadeTransition extends Component {
             <Animated.View
                 style={{
                     ...this.props.style,
-                    opacity: fadeAnimation
+                    opacity: fadeAnimation,
+                    alignSelf: 'stretch',
+                    flex: 1
                 }}
             >
                 {this.props.children}

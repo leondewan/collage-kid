@@ -6,7 +6,7 @@ import { styles } from './CollageStyles';
 class Header extends Component {
     render() {
         return (
-            <View>
+            <View style={{alignItems: 'center', alignSelf: 'stretch'}}>
                 <View>
                     <StatusBar backgroundColor="blue" barStyle="light-content" />
                 </View>
@@ -16,7 +16,7 @@ class Header extends Component {
                     : styles.header}
                 >
                     <Image
-                        source={require('../img/collageart12.jpg')}
+                        source={require('../img/collageart13.png')}
                         style={styles.headerImage}
                     />
                 </View>

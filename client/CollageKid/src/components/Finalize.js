@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     Dimensions,
     PixelRatio,
-    CameraRoll,
     Share
 } from 'react-native';
 import Slider from 'react-native-slider';

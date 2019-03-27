@@ -36,6 +36,11 @@ PODS:
     - QBImagePickerController
     - React/Core
     - RSKImageCropper
+  - RNSound (0.10.12):
+    - React/Core
+    - RNSound/Core (= 0.10.12)
+  - RNSound/Core (0.10.12):
+    - React/Core
   - RSKImageCropper (2.2.1)
   - yoga (0.58.5.React)
 
@@ -53,6 +58,7 @@ DEPENDENCIES:
   - React/RCTVibration (from `../node_modules/react-native`)
   - React/RCTWebSocket (from `../node_modules/react-native`)
   - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
+  - RNSound (from `../node_modules/react-native-sound`)
   - yoga (from `../node_modules/react-native/ReactCommon/yoga/yoga.podspec`)
 
 SPEC REPOS:
@@ -67,6 +73,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   RNImageCropPicker:
     :path: "../node_modules/react-native-image-crop-picker"
+  RNSound:
+    :path: "../node_modules/react-native-sound"
   yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga/yoga.podspec"
 
@@ -75,9 +83,10 @@ SPEC CHECKSUMS:
   React: 6cd5e6fcc3b6a52d2fb27a638f622139da710dff
   react-native-image-picker: e6e06d4315e3c85bad17e4b2002cd29f11d202c8
   RNImageCropPicker: e56deca5b463b9493d22e966cfd83cb1fc5c99bb
+  RNSound: e157320f503bdd4f4ee6d8542e948d54f90c3c3a
   RSKImageCropper: 98296ad26b41753f796b6898d015509598f13d97
   yoga: 0e0009ffb2544aeead64a1209f3d488d3849947b
 
-PODFILE CHECKSUM: 8c586a485c2563947d1a422c7d10a5dd05c97402
+PODFILE CHECKSUM: 267ef0defd6883cc776538d85bd228f968a202d5
 
 COCOAPODS: 1.6.1

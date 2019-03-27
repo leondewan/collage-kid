@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import SoundRecorder from 'react-native-sound-recorder';
 import RNSoundLevel from 'react-native-sound-level';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import LinearGradient from 'react-native-linear-gradient';
 
 
@@ -60,29 +59,45 @@ export default class SoundRecording extends Component {
     }
 
     renderRecordingButtons = () => {
-        if (this.state.recording) {
-            return (
-                <TouchableOpacity
-                    onPress={this.handleRecordStop}
-                    style={{ ...styles.utilButton, backgroundColor: '#ff4e00' }}
-                >
-                    <Text style={{ ...styles.buttonText, fontSize: 14 }}> Stop Recording </Text>
-                </TouchableOpacity>
-            );
-        }
-            return (
-                <TouchableOpacity onPress={this.handleRecordStart} style={styles.utilButton}>
-                    <Text style={{ ...styles.buttonText, fontSize: 14 }}> Record Sounds </Text>
-                </TouchableOpacity>
-            );
+        return (
+            <TouchableOpacity
+                onPress={this.state.recording ? this.handleRecordStop : this.handleRecordStart}
+                style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    borderColor: '#fff',
+                    borderWidth: 5,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
+            >
+                <View
+                    style={this.state.recording
+                        ? {
+                            width: 30,
+                            height: 30,
+                            borderRadius: 5,
+                            backgroundColor: '#f53333'
+                        }
+                        : {
+                            width: 50,
+                            height: 50,
+                            borderRadius: 25,
+                            backgroundColor: '#f53333'
+                        }
+                }
+                />
+            </TouchableOpacity>
+        );
     }
 
     render() {
         return (
             <CollageFadeTransition
-                style={{ flex: 1 }}
+                style={{ flex: 1, alignSelf: 'stretch' }}
             >
-                <View style={{ ...styles.utilContainer }}>
+                <View style={styles.utilContainer}>
                     <View>
                         <StatusBar hidden />
                     </View>
@@ -128,39 +143,29 @@ export default class SoundRecording extends Component {
                                 flex: 0,
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
-                                alignItems: 'center'
+                                alignSelf: 'stretch',
+                                alignItems: 'center',
+                                paddingLeft: 25,
+                                paddingRight: 25,
+                                paddingTop: 20,
+                                paddingBottom: 20
                             }}
                         >
-
-                            <TouchableOpacity
-                                style={this.state.recording
-                                ? { ...styles.utilButton, width: 50, borderColor: '#333' }
-                                : { ...styles.utilButton, width: 50 }}
-                                onPress={() => this.props.switchPage('imagessounds')}
-                                disabled={this.state.recording}
-                            >
-                                <Icon
-                                    name="chevron-left"
-                                    size={20}
-                                    color={this.state.recording ? '#333' : '#f2fffc'}
-                                />
-
-                             </TouchableOpacity>
+                            <View style={{ width: 80 }} />
 
                             {this.renderRecordingButtons()}
 
                             <TouchableOpacity
-                                style={this.state.recording
-                                ? { ...styles.utilButton, width: 50, borderColor: '#333' }
-                                : { ...styles.utilButton, width: 50 }}
-                                onPress={() => this.props.switchPage('finalize')}
+                                onPress={() => this.props.switchPage('gather')}
                                 disabled={this.state.recording}
+                                style={{ marginTop: 15, width: 80, alignItems: 'flex-end' }}
                             >
-                                <Icon
-                                    name="chevron-right"
-                                    size={20}
-                                    color={this.state.recording ? '#333' : '#f2fffc'}
-                                />
+                                <Text
+                                    style={this.state.recording ?
+                                        { color: '#333', fontSize: 18 }
+                                        : { color: '#f2fffc', fontSize: 18 }
+                                    }
+                                >Done</Text>
                              </TouchableOpacity>
                         </View>
                     </View>

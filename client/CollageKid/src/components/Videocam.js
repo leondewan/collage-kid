@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { Text, TouchableOpacity, View, Dimensions, StatusBar, Platform } from 'react-native';
+import { Text, TouchableOpacity, View, Dimensions, StatusBar } from 'react-native';
 import { RNCamera } from 'react-native-camera';
+import RNThumbnail from 'react-native-thumbnail';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { styles } from './CollageStyles';
@@ -11,35 +12,12 @@ class Videocam extends Component {
     state = {
         recording: false,
         back: true,
-        currVideoLength: this.props.currVideoLength || 0,
-        runtime: Math.floor(this.props.currVideoLength) || 0,
-        maxTime: false }
+        runtime: 0 }
 
     componentWillMount() {
-        this.minVideoLength = 3;
         this.maxVideoLength = 360;
-        if (this.props.currVideoLength >= this.maxVideoLength) {
-            this.setState({ maxTime: true });
-        }
-    }
-    componentDidMount() {
-        if (!this.props.startTime) {
-            this.props.setStartTime(Date.now());
-        }
     }
 
-    componentDidUpdate(oldProps) {
-        const newProps = this.props;
-        if (oldProps.currVideoLength !== newProps.currVideoLength) {
-            this.loadCurrVideoLength(newProps.currVideoLength);
-        }
-    }
-
-    loadCurrVideoLength = (currVideoLength) => {
-        this.setState({
-            currVideoLength
-        });
-    }
 
     runTimer = (run) => {
         let counter = this.state.runtime;
@@ -54,7 +32,6 @@ class Videocam extends Component {
                 }
             }, 1000);
         } else {
-            this.props.loadCurrVideoLength(this.state.runtime);
             clearInterval(this.timer);
         }
     }
@@ -70,17 +47,29 @@ class Videocam extends Component {
             };
             const data = await this.camera.recordAsync(options);
             this.setState({ recording: false });
-            const path = Platform.OS === 'android' ? data.uri.replace('file://', '') : data.uri.replace('file://', '');
-            const fileNameIndex = path.lastIndexOf('/') + 1;
-            const fileName = path.substr(fileNameIndex);
 
+            RNThumbnail.get(data.uri)
+                .then(result => {
+                    console.log('thumb path', result.path);
+                    return { data, result };
+                })
+                .then(res => {
+                    console.log('media capture', data);
 
-            this.props.loadMedia({
-                uri: data.uri,
-                fileName,
-                type: 'video'
-              }
-            );
+                    const path = res.data.uri.replace('file://', '');
+                    const fileNameIndex = path.lastIndexOf('/') + 1;
+                    const fileName = path.substr(fileNameIndex);
+
+                    this.props.loadMedia({
+                        uri: path,
+                        fileName,
+                        thumb: res.result.path,
+                        type: 'video'
+                      }
+                    );
+                    return data;
+                })
+                .catch(err => console.log('thumb error', err));
         }
     };
 
@@ -95,34 +84,39 @@ class Videocam extends Component {
         if (this.state.recording) {
             this.stopRecord();
         }
-        this.props.switchPage('video');
+        this.props.switchPage('gather');
     }
 
     renderRecordingButtons = () => {
-        if (this.state.recording) {
-            return (
-                <TouchableOpacity
-                    onPress={this.stopRecord}
-                    style={{ ...styles.utilButton, backgroundColor: '#ff4e00' }}
-                >
-                    <Text style={{ ...styles.buttonText, fontSize: 14 }}> Stop Recording </Text>
-                </TouchableOpacity>
-            );
-        }
         return (
             <TouchableOpacity
-                onPress={this.recordVideo}
-                style={this.state.maxTime
-                    ? { ...styles.utilButton, borderColor: '#333' }
-                    : styles.utilButton}
-                    disabled={this.state.maxTime}
+                onPress={this.state.recording ? this.stopRecord : this.recordVideo}
+                style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    borderColor: '#fff',
+                    borderWidth: 5,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
             >
-                <Text
-                    style={this.state.maxTime
-                        ? { ...styles.buttonText, fontSize: 14, color: '#333' }
-                        : { ...styles.buttonText, fontSize: 14 }}
-
-                > Record Video </Text>
+                <View
+                    style={this.state.recording
+                        ? {
+                            width: 30,
+                            height: 30,
+                            borderRadius: 5,
+                            backgroundColor: '#f53333'
+                        }
+                        : {
+                            width: 50,
+                            height: 50,
+                            borderRadius: 25,
+                            backgroundColor: '#f53333'
+                        }
+                }
+                />
             </TouchableOpacity>
         );
     }
@@ -130,7 +124,7 @@ class Videocam extends Component {
 
     render() {
       return (
-            <CollageFadeTransition style={{ flex: 1 }}>
+            <CollageFadeTransition>
                 <View style={styles.utilContainer}>
                     <View>
                         <StatusBar hidden />
@@ -167,44 +161,30 @@ class Videocam extends Component {
                             flex: 0,
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            alignItems: 'center' }}
+                            alignSelf: 'stretch',
+                            alignItems: 'center',
+                            paddingLeft: 25,
+                            paddingRight: 25,
+                            paddingTop: 20,
+                            paddingBottom: 20
+                        }}
                     >
-                        <TouchableOpacity
-                            onPress={this.done} style={this.state.recording ||
-                                this.state.currVideoLength <= this.minVideoLength
-                            ? { ...styles.utilButton, width: 50, borderColor: '#333' }
-                            : { ...styles.utilButton, width: 50 }}
-                            disabled={this.state.recording ||
-                                this.state.currVideoLength <= this.minVideoLength}
-                        >
-                            <Icon
-                                name="chevron-left"
-                                size={20}
-                                color={this.state.recording ||
-                                    this.state.currVideoLength <= this.minVideoLength
-                                    ? '#333' : '#f2fffc'}
-                            />
-                        </TouchableOpacity>
+                        <View style={{ width: 80 }} />
 
                         {this.renderRecordingButtons()}
 
                         <TouchableOpacity
-                            onPress={() => this.props.switchPage('imagessounds')}
-                            style={this.state.recording ||
-                                this.state.currVideoLength <= this.minVideoLength
-                                ? { ...styles.utilButton, width: 50, borderColor: '#333' }
-                                : { ...styles.utilButton, width: 50 }}
-                            disabled={this.state.recording ||
-                                this.state.currVideoLength <= this.minVideoLength}
+                            onPress={() => this.props.switchPage('gather')}
+                            disabled={this.state.recording}
+                            style={{ marginTop: 15, width: 80, alignItems: 'flex-end' }}
                         >
-                            <Icon
-                                name="chevron-right"
-                                size={20}
-                                color={this.state.recording ||
-                                    this.state.currVideoLength <= this.minVideoLength
-                                ? '#333' : '#f2fffc'}
-                            />
-                        </TouchableOpacity>
+                            <Text
+                                style={this.state.recording ?
+                                    { color: '#333', fontSize: 18 }
+                                    : { color: '#f2fffc', fontSize: 18 }
+                                }
+                            >Done</Text>
+                         </TouchableOpacity>
 
                     </View>
 

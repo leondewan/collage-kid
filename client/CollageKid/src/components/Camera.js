@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Text, TouchableOpacity, View, Dimensions, StatusBar } from 'react-native';
+import { Text, TouchableOpacity, View, Dimensions, StatusBar, Image} from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -24,6 +24,7 @@ class Camera extends Component {
               this.props.loadMedia({
                   uri: data.uri,
                   fileName,
+                  thumb: data.uri,
                   type: 'image'
               });
           }
@@ -44,35 +45,58 @@ class Camera extends Component {
                         type={this.state.back ? RNCamera.Constants.Type.back
                             : RNCamera.Constants.Type.front}
                         flashMode={RNCamera.Constants.FlashMode.off}
-                        permissionDialogTitle={'Permission to use camera'}
-                        permissionDialogMessage={'We need your permission to use your camera phone'}
                     />
                     <View
                         style={{
                             flex: 0,
                             flexDirection: 'row',
                             justifyContent: 'space-between',
-                            alignItems: 'center' }}
+                            alignSelf: 'stretch',
+                            alignItems: 'center',
+                            paddingRight: 25,
+                            paddingTop: 20,
+                            paddingBottom: 20
+                        }}
                     >
                         <TouchableOpacity
-                            onPress={() => this.props.switchPage('imagessounds')}
-                            style={{ ...styles.utilButton, width: 50 }}
-                        >
-                         <Icon name="chevron-left" size={20} color="#f2fffc" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={this.takePicture} style={styles.utilButton}>
-                            <Text style={{ ...styles.buttonText, fontSize: 14 }}>
-                                Take Picture
-                            </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
                             onPress={() => this.setState({ back: !this.state.back })}
-                            style={{ ...styles.utilButton, width: 50 }}
+                            style={{ ...styles.iconHolder }}
                         >
-                          <Icon name="retweet" size={20} color='#f2fffc' />
+                            <Image
+                                source={require('../img/icon_flipcamera.png')}
+                                style={styles.icon}
+                            />
                         </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={this.takePicture}
+                            style={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 32,
+                                borderColor: '#fff',
+                                borderWidth: 5,
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: 50,
+                                    height: 50,
+                                    borderRadius: 25,
+                                    backgroundColor: '#fff'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => this.props.switchPage('gather')}
+                            style={{ marginTop: 10 }}
+                        >
+                            <Text
+                                style={{ color: '#f2fffc', fontSize: 18 }}
+                            >Done</Text>
+                         </TouchableOpacity>
+
                     </View>
                 </View>
             </CollageFadeTransition>

@@ -222,8 +222,8 @@ module.exports = class SpookyMath {
         var terrContainer = {};
         let heavContainer = {};
 
-        terrContainer = terrProto.map((value, index ) => ({'clip': index, 'duration': value}));
-        heavContainer = heavProto.map((value, index ) => ({'clip': index, 'duration': value}));
+        terrContainer = terrProto.map((value, index ) => ({'clip': index, 'duration': parseFloat(value.toFixed(1))}));
+        heavContainer = heavProto.map((value, index ) => ({'clip': index, 'duration': parseFloat(value.toFixed(1))}));
 
         const addStartTimes = (container) => {
             var startTime = 0;
@@ -240,8 +240,8 @@ module.exports = class SpookyMath {
         addStartTimes(terrContainer);
         addStartTimes(heavContainer);
 
-        var terrContainerMap = terrContainer.reduce((acc, curr) => [...acc, curr.duration.toFixed(2)], []);
-        var heavContainerMap = heavContainer.reduce((acc, curr) => [...acc, curr.duration.toFixed(2)], []);
+        var terrContainerMap = terrContainer.reduce((acc, curr) => [...acc, curr.duration.toFixed(1)], []);
+        var heavContainerMap = heavContainer.reduce((acc, curr) => [...acc, curr.duration.toFixed(1)], []);
 
         const applyMapToContainer = (container, map) => {
             container = container.slice();

@@ -1,22 +1,33 @@
 const fs = require('fs');
+const spawn = require('child_process').spawn;
 
 exports.concatMedia = () => {
     var videoScaleHolder = [];
 
-    var scaleVideos = (ffmpeg, mediaFilePath) => {
+    var scaleVideos = (ffmpeg, mediaFilePath, ws) => {
         return new Promise((resolve, reject) => {
             var videoList = fs.readdirSync(mediaFilePath + '/video');
+            var waitInterval = 10 / videoList.length;
             for(index = 0; index < videoList.length; index ++) {
                 videoScaleHolder[index] = (index) =>  {
                     return new Promise((resolve, reject) => {
                         ffmpeg(`${mediaFilePath}/video/${videoList[index]}`)
-                            .videoFilters('scale=144:-1')
-                            .videoFilters('crop=144:192')
+                            .videoFilters('scale=480:640')
+                            .fps(15)
 
                             .on('error', error => {
+                                console.log('scaler error?');
                                 reject((err) => console.log('individual video scaler error', err));
+                                ws.send(JSON.stringify({
+                                    status: 'error'
+                                }));
                             })
                             .on('end', () => {
+                                console.log('scaled video');
+                                ws.send(JSON.stringify({
+                                    status: 'wait',
+                                    interval: waitInterval
+                                }));
                                 resolve( `${mediaFilePath}/video_scaled/${videoList[index]}`);
                             })
                             .save(`${mediaFilePath}/video_scaled/${videoList[index]}`)
@@ -25,50 +36,46 @@ exports.concatMedia = () => {
                 }
             }
             return Promise.all(videoScaleHolder.map((cut, index) => cut(index)))
-                .then((result) => resolve({
-                    assets: result,
-                    path: mediaFilePath
-                }))
+                .then((result) => {
+                    console.log('scaled videos');
+                    return resolve({
+                        assets: result,
+                        path: mediaFilePath
+                    })
+                })
                 .catch((err) => reject('video scaler error:' + err))
         })
     }
-    var spliceMedia = (ffmpeg, mediaFilePath, mediaConcat, mediaType, fileExtension, scaled, done) => {
-        var mergedMedia = ffmpeg();
-        //var mediaPath = `${mediaFilePath}/${mediaType}${scaled ? '_scaled' : ''}/`
-        mediaConcat.forEach((mediaClip) => {
-            mergedMedia = mergedMedia.addInput(mediaClip);
-        });
+    var spliceMedia = (mediaFilePath, mediaConcat, mediaType, fileExtension, scaled, done) => {
+        var mediaPath = `${mediaFilePath}/${mediaType}${scaled ? '_scaled' : ''}/`
+        var mediaList = mediaConcat.map((mediaClip) => `file ${mediaClip}`).join('\n');
 
-        if(mediaType==='audio') {
-            mergedMedia.mergeToFile(`${mediaFilePath}/concat${mediaType}.${fileExtension}`, './tmp/')
-                .on('error', function(err) {
-                    console.log('Error in audio' + err.message);
-                    done(false, err.message);
-                })
-                .on('end', function() {
-                    done(true, `${mediaFilePath}/concat${mediaType}.${fileExtension}`);
-            });
-        } else {
+        fs.writeFileSync(`${mediaPath}concatList.txt`, mediaList);
 
-            mergedMedia.mergeToFile(`${mediaFilePath}/concat${mediaType}.${fileExtension}`, './tmp/').fps(15)
-                .on('error', function(err) {
-                    console.log('Error:' + mediaType + ' ' + err.message);
-                    done(false, err.message);
-                })
-                .on('end', function() {
-                    done(true, `${mediaFilePath}/concat${mediaType}.${fileExtension}`);
-            });
-        }
+        let ffmpeg = spawn('ffmpeg', [
+            '-y',
+            '-f',
+            'concat',
+            '-safe',
+            '0',
+            '-i',
+            `${mediaPath}/concatList.txt`,
+            '-c',
+            'copy',
+            `${mediaFilePath}/concat${mediaType}.${fileExtension}`
+        ]);
+        ffmpeg.on('exit', done(true, `${mediaFilePath}/concat${mediaType}.${fileExtension}`));
     }
 
-    var concatVideos = (ffmpeg, media) => {;
+    var concatVideos = (ffmpeg, media, ws) => {
         var videoConcat = media.assets;
         return new Promise((resolve, reject) => {
-            spliceMedia(ffmpeg, media.path, videoConcat, 'video', 'mov', true, (success, info) => {
+            spliceMedia(media.path, videoConcat, 'video', 'mp4', true, (success, info) => {
                 if(success) {
-                    resolve({media: info, path: media.path});
+                    console.log('concat videos');
+                    return resolve({media: info, path: media.path});
                 } else {
-                    reject(info);
+                    return reject(info);
                 }
             });
         }, true);
@@ -85,8 +92,9 @@ exports.concatMedia = () => {
                 return;
             }
             soundConcatFull = soundConcat.map((clip) => path + '/sound/' + clip);
-            spliceMedia(ffmpeg, path, soundConcatFull, 'sound', 'mp3', false, (success, info) => {
+            spliceMedia(path, soundConcatFull, 'sound', 'mp4', false, (success, info) => {
                 if(success) {
+                    console.log('concat sounds');
                     resolve({media: info, path});
                 } else {
                     reject(info);
@@ -112,6 +120,7 @@ exports.getTrackDuration = (ffmpeg, track) => {
             if(err) {
                 reject('error:' + err);
             } else {
+                console.log('calculated duration');
                 resolve({ duration: metadata.format.duration, path: track.path });
             }
         });
@@ -128,31 +137,37 @@ exports.getImagesInfo = (path) => {
 
 exports.extractAudio = (ffmpeg, info) => {
     return new Promise((resolve, reject) => {
-        ffmpeg(info[0].media).noVideo()
-            .save(`${info[0].path}/concatvideo_audio.mp3`)
+        setTimeout( () => ffmpeg(info[0].media).noVideo()
+            .save(`${info[0].path}/concatvideo_audio.mp4`)
             .on('error', function(err) {
                 console.log('Error in extract audio ' + err.message);
                 reject(err => console.log('error', err));
             })
-            .on('end', () => resolve(info));
+            .on('end', () => {
+                console.log('extracted audio');
+                return resolve(info);
+            }), 500);
     })
 
 }
 
 exports.removeAudio = (ffmpeg, info) => {
     return new Promise((resolve, reject) => {
-        ffmpeg(info[0].media).noAudio()
-            .save(`${info[0].path}/concatvideo_noaudio.mov`)
+        setTimeout( () => ffmpeg(info[0].media).noAudio()
+            .save(`${info[0].path}/concatvideo_noaudio.mp4`)
             .on('error', function(err) {
                 console.log('Error in remove audio' + err.message);
                 reject(err => console.log('error', err));
             })
-            .on('end', () => resolve(info));
+            .on('end', () => {
+                console.log('removed audio');
+                return resolve(info);
+            }), 500);
     })
 
 }
 
-exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo, ws) => {
+exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, ws) => {
     return new Promise((resolve, reject) => {
         var rawImageTimes = EDL[1];
         var imageList = EDL[2];
@@ -180,13 +195,15 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
             imageScaleHolder[index] = (index) =>  {
                 return new Promise((resolve, reject) => {
                     ffmpeg(`${mediaFilePath}/image/${imageList[index]}`)
-                        .size('144x192')
+                        .videoFilters('scale=480:-1')
+                        .videoFilters('crop=480:640')
                         .on('error', error => {
                             console.log('error', error)
                             reject((err) => console.log('error', err));
                         })
                         .on('end', () => {
-                            resolve(`${mediaFilePath}/image_scaled/${imageList[index]}`);
+                            console.log('scaled image');
+                            return resolve(`${mediaFilePath}/image_scaled/${imageList[index]}`);
                         })
                         .save(`${mediaFilePath}/image_scaled/${imageList[index]}`)
 
@@ -200,24 +217,25 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
                     ffmpeg(`${mediaFilePath}/image_scaled/${imageList[index]}`)
                         .loop(rawImageTimes[index])
                         .fps(15)
-                        .size('144x192')
                         .on('error', error => {
                             console.log('error', error)
                             reject((err) => console.log('error', err));
                         })
-                        .on('end', () => resolve(`${mediaFilePath}/imagecuts/imageCut${index}.mov`))
-                        .save(`${mediaFilePath}/imagecuts/imageCut${index}.mov`);
+                        .on('end', () => {
+                            console.log('made image cut');
+                            return resolve(`${mediaFilePath}/imagecuts/imageCut${index}.mp4`)})
+                        .save(`${mediaFilePath}/imagecuts/imageCut${index}.mp4`);
                 })
             }
         }
 
         const appendImageCuts = (imageCuts) => {
             var mergedMedia = ffmpeg();
-            var mediaConcat = [`${mediaFilePath}/concatvideo_noaudio.mov`, ...imageCuts];
+            var mediaConcat = [`${mediaFilePath}/concatvideo_noaudio.mp4`, ...imageCuts];
             return new Promise((resolve, reject) => {
                 if(!imageCuts.length) {
-                    fs.rename(`${mediaFilePath}/concatvideo_noaudio.mov`,
-                        `${mediaFilePath}/concatfullvideo.mov`,
+                    fs.rename(`${mediaFilePath}/concatvideo_noaudio.mp4`,
+                        `${mediaFilePath}/concatfullvideo.mp4`,
                         (err) => {
                             if ( err ) console.log('ERROR: ' + err);
                         });
@@ -225,42 +243,53 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
                     return;
                 }
 
+                mediaList = mediaConcat.map((mediaClip) => `file ${mediaClip}`).join('\n');
 
-                mediaConcat.forEach((mediaClip) => {
-                    mergedMedia = mergedMedia.addInput(mediaClip);
+                fs.writeFileSync(`${mediaFilePath}/imageCutsList.txt`, mediaList);
+
+                let ffmpeg = spawn('ffmpeg', [
+                    '-y',
+                    '-f',
+                    'concat',
+                    '-safe',
+                    '0',
+                    '-i',
+                    `${mediaFilePath}/imageCutsList.txt`,
+                    '-c',
+                    'copy',
+                    `${mediaFilePath}/concatfullvideo.mp4`
+                ]);
+                ffmpeg.on('exit', () => {
+                    console.log('concatted full video');
+                    return resolve(`${mediaFilePath}/concatfullvideo.mp4`)
                 });
-
-
-                mergedMedia.mergeToFile(`${mediaFilePath}/concatfullvideo.mov`, './tmp/')
-                    .fps(15)
-                    .on('error', function(err) {
-                        console.log('Error ' + err.message);
-                        reject((err) => console.log('error', err));
-                    })
-                    .on('end', () => resolve(`${mediaFilePath}/concatfullvideo.mov`));
             });
         }
 
         const concatAudio = () => {
             return new Promise((resolve, reject ) => {
-                if(!fs.existsSync(`${mediaFilePath}/concatsound.mp3`)){
-                    fs.rename(`${mediaFilePath}/concatvideo_audio.mp3`,
-                        `${mediaFilePath}/concatfullaudio.mp3`,
+                if(!fs.existsSync(`${mediaFilePath}/concatsound.mp4`)){
+                    console.log('no concat sounds')
+                    fs.rename(`${mediaFilePath}/concatvideo_audio.mp4`,
+                        `${mediaFilePath}/concatfullaudio.mp4`,
                         (err) => {
                             if ( err ) console.log('ERROR: ' + err);
                         });
                     resolve();
                     return;
                 }
-                ffmpeg(`${mediaFilePath}/concatvideo_audio.mp3`)
-                    .addInput(`${mediaFilePath}/concatsound.mp3`)
-                    .mergeToFile(`${mediaFilePath}/concatfullaudio.mp3`, './tmp/')
+
+
+                ffmpeg(`${mediaFilePath}/concatvideo_audio.mp4`)
+                    .addInput(`${mediaFilePath}/concatsound.mp4`)
+                    .mergeToFile(`${mediaFilePath}/concatfullaudio.mp4`, './tmp/')
 
                     .on('error', function(err) {
                         console.log('Error', err.message);
                         reject('error:', err);
                     })
                     .on('end', function() {
+                        console.log('concatted full audio');
                         resolve();
                 });
             });
@@ -268,10 +297,11 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
 
         const prepareCutVideoClips = () => {
             var terrestrial = EDL[0].terrestrial;
+            var waitInterval = 10 / terrestrial.length;
             for(var index = 0; index < terrestrial.length; index ++) {
                 videoCutsHolder[index] = (index) =>  {
                     return new Promise((resolve, reject) => {
-                        ffmpeg(`${mediaFilePath}/concatfullvideo.mov`)
+                        ffmpeg(`${mediaFilePath}/concatfullvideo.mp4`)
                             .seekInput(terrestrial[index].startTime)
                             .duration(EDL[0].terrestrial[index].duration)
                             .fps(15)
@@ -280,9 +310,14 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
                                 reject((err) => console.log('error', err));
                             })
                             .on('end', () => {
-                                resolve(`${mediaFilePath}/videocuts/videocut${index}.mov`);
+                                console.log('prepared video cut clip');
+                                ws.send(JSON.stringify({
+                                    status: 'wait',
+                                    interval: waitInterval
+                                }));
+                                resolve(`${mediaFilePath}/videocuts/videocut${index}.mp4`);
                             })
-                            .save(`${mediaFilePath}/videocuts/videocut${index}.mov`);
+                            .save(`${mediaFilePath}/videocuts/videocut${index}.mp4`);
                     })
                 }
             }
@@ -291,31 +326,46 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
         prepareCutVideoClips();
 
         const assembleVideoClips = (videoClips) => {
-            var mergedMedia = ffmpeg();
+            console.log('starting assemblevideoclips');
             return new Promise((resolve, reject) => {
+                //var mediaList = videoClips.map((mediaClip) => `file ${mediaClip}`).join('\n');
+                var mediaList = '';
                 for(var i = 0; i < videoClips.length; i++) {
-                    mergedMedia = mergedMedia.addInput(videoClips[terrestrialMap[i]]);
+                    mediaList += `file ${videoClips[terrestrialMap[i]]}\n`;
                 }
 
-                mergedMedia.mergeToFile(`${mediaFilePath}/assembledfullvideo.mov`, './tmp/')
-                    .fps(15)
-                    .on('error', function(err) {
-                        console.log('Error ' + err.message);
-                        reject((err) => console.log('error', err));
-                    })
-                    .on('end', function() {
-                        resolve(`${mediaFilePath}/assembledfullvideo.mov`);
-                });
+                fs.writeFileSync(`${mediaFilePath}/assembleVideoList.txt`, mediaList);
 
+                let ffmpeg = spawn('ffmpeg', [
+                    '-y',
+                    '-f',
+                    'concat',
+                    '-safe',
+                    '0',
+                    '-i',
+                    `${mediaFilePath}/assembleVideoList.txt`,
+                    '-c',
+                    'copy',
+                    `${mediaFilePath}/assembledfullvideo.mp4`
+                ]);
+                ffmpeg.on('exit', () => {
+                    console.log('assembled full video');
+                    ws.send(JSON.stringify({
+                        status: 'wait',
+                        interval: 10
+                    }));
+                    return resolve(`${mediaFilePath}/assembledfullvideo.mp4`)
+                });
             })
         }
 
         const prepareCutAudioClips = () => {
             var heavenly = EDL[0].heavenly;
+            var waitInterval = 10 / heavenly.length;
             for(var index = 0; index < heavenly.length; index ++) {
                 audioCutsHolder[index] = (index) =>  {
                     return new Promise((resolve, reject) => {
-                        ffmpeg(`${mediaFilePath}/concatfullaudio.mp3`)
+                        ffmpeg(`${mediaFilePath}/concatfullaudio.mp4`)
                             .seekInput(heavenly[index].startTime)
                             .duration(EDL[0].heavenly[index].duration)
                             .on('error', error => {
@@ -323,9 +373,14 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
                                 reject((err) => console.log('error', err));
                             })
                             .on('end', () => {
-                                resolve(`${mediaFilePath}/audiocuts/audiocut${index}.mp3`);
+                                console.log('prepared audio cut clip');
+                                ws.send(JSON.stringify({
+                                    status: 'wait',
+                                    interval: waitInterval
+                                }));
+                                resolve(`${mediaFilePath}/audiocuts/audiocut${index}.mp4`);
                             })
-                            .save(`${mediaFilePath}/audiocuts/audiocut${index}.mp3`);
+                            .save(`${mediaFilePath}/audiocuts/audiocut${index}.mp4`);
                     })
                 }
             }
@@ -336,18 +391,32 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
         const assembleAudioClips = (audioClips) => {
             var mergedMedia = ffmpeg();
             return new Promise((resolve, reject) => {
+                var mediaList = '';
                 for(var i = 0; i < audioClips.length; i++) {
-                    mergedMedia = mergedMedia.addInput(audioClips[heavenlyMap[i]]);
+                    mediaList += `file ${audioClips[heavenlyMap[i]]}\n`;
                 }
 
-                mergedMedia.mergeToFile(`${mediaFilePath}/assembledfullaudio.mp3`, './tmp/')
-                    .fps(15)
-                    .on('error', function(err) {
-                        console.log('Error ' + err.message);
-                        reject((err) => console.log('error', err));
-                    })
-                    .on('end', function() {
-                        resolve(`${mediaFilePath}/assembledfullaudio.mp3`);
+                fs.writeFileSync(`${mediaFilePath}/assembleAudioList.txt`, mediaList);
+
+                let ffmpeg = spawn('ffmpeg', [
+                    '-y',
+                    '-f',
+                    'concat',
+                    '-safe',
+                    '0',
+                    '-i',
+                    `${mediaFilePath}/assembleAudioList.txt`,
+                    '-c',
+                    'copy',
+                    `${mediaFilePath}/assembledfullaudio.mp4`
+                ]);
+                ffmpeg.on('exit', () => {
+                    console.log('assembled full audio');
+                    ws.send(JSON.stringify({
+                        status: 'wait',
+                        interval: 10
+                    }));
+                    return resolve(`${mediaFilePath}/assembledfullaudio.mp4`)
                 });
 
             })
@@ -356,8 +425,8 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
         const assembleFinalVideo = () => {
           console.log('started assembling final video');
               return new Promise((resolve, reject) => {
-                ffmpeg(`${mediaFilePath}/assembledfullvideo.mov`)
-                .addInput(`${mediaFilePath}/assembledfullaudio.mp3`)
+                ffmpeg(`${mediaFilePath}/assembledfullvideo.mp4`)
+                .addInput(`${mediaFilePath}/assembledfullaudio.mp4`)
                 .size('480x640')
                 .fps(29.96)
                 .videoCodec('libx264')
@@ -377,21 +446,24 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
                     .then(() => concatAudio())
                     .then(() => {
                         ws.send(JSON.stringify({
-                            status: 'wait'
+                            status: 'wait',
+                            interval: 10
                         }));
                         return Promise.all(videoCutsHolder.map((cut, index) => cut(index)))
                     })
                     .then((result)=> assembleVideoClips(result))
                     .then(() => {
                         ws.send(JSON.stringify({
-                            status: 'wait'
+                            status: 'wait',
+                            interval: 10
                         }));
                         return Promise.all(audioCutsHolder.map((cut, index) => cut(index)))
                     })
                     .then((result)=> assembleAudioClips(result))
                     .then(() => {
                         ws.send(JSON.stringify({
-                            status: 'wait'
+                            status: 'wait',
+                            interval: 10
                         }));
                         return assembleFinalVideo()
                     })
@@ -433,7 +505,7 @@ exports.executeEDL = (ffmpeg, EDL, mediaFilePath, mediaFilePathFinal, emailInfo,
             .then(() => assembly())
             .then((finalVideo)=> {
                 cleanup();
-                resolve({EDL, mediaFilePath, emailInfo});
+                resolve({EDL, mediaFilePath});
             })
             .catch((err) => {
                 console.log('error: ', err);

@@ -1,90 +1,78 @@
 
 import React, { Component } from 'react';
-import { View, ActivityIndicator, ImageBackground, AsyncStorage, Platform } from 'react-native';
-import firebase from 'firebase';
+import { View, AsyncStorage, Platform } from 'react-native';
 
 import Welcome from './Welcome';
-import Video from './Video';
+import Gather from './Gather';
+import Create from './Create';
+import Watch from './Watch';
 import Videocam from './Videocam';
 import Camera from './Camera';
-import CameraRollViewer from './CameraRollViewer';
-import ImagesSounds from './ImagesSounds';
 import SoundRecording from './SoundRecording';
-import Finalize from './Finalize';
-import Login from './Login';
-
-import { firebaseAuth } from '../crypt';
 import { styles } from './CollageStyles';
 
 export default class App extends Component {
     state = {
         media: [],
-        collageView: '',
-        welcome: true,
-        currVideoLength: 0,
-        loggedIn: null,
-        cycle: 1,
         startTime: 0,
-        uploading: false
+        minVideo: false,
+        uploading: false,
+        finalVideoURI: '',
+        videoInfo: '',
+        pageView: 'gather'
     };
 
-    componentWillMount() {
-        //const firebase = require('firebase');
-
-        firebase.initializeApp({
-            ...firebaseAuth
-        });
-
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                this.setState({ loggedIn: true });
-                this.user = user;
-            } else {
-                this.setState({ loggedIn: false });
-            }
-          });
-    }
-
     componentDidMount() {
-        this.host = '192.168.1.3:3001';
-        //this.host = 'collagekid.com/collageserver/'
-        this.allowedCycles = 1;
+        //this.host = '192.168.1.3:3001';
+        this.host = 'collagekid.com/collageserver/';
 
-        AsyncStorage.getItem('welcome').then(value => {
-           if (value === 'true' || value === null) {
-                AsyncStorage.setItem('welcome', 'false');
-                this.switchPage('welcome');
-           } else {
-               this.switchPage('video');
+        //this.httpProtocol = 'http://';
+        this.httpProtocol = 'https://';
+
+        //this.socketProtocol = 'ws://';
+        this.socketProtocol = 'wss://';
+
+        const createUID = () => ('' + 1e7+-1e3+-4e3+-8e3+-1e11)
+        .replace(/1|0/g,
+            () => (0 | Math.random() * 16).toString(16));
+
+        AsyncStorage.getItem('uid').then(value => {
+           if (!value) {
+               const uid = createUID();
+               console.log(uid);
+               AsyncStorage.setItem('uid', uid);
+               this.uid = uid;
            }
+           this.uid = value;
        });
     }
 
-    setWelcome = (val) => {
-        AsyncStorage.setItem('welcome', val);
+    setMinVideo = (minVideo) => {
+        this.setState({ minVideo });
     }
-
-    setLogin = (loggedIn) => this.setState({ loggedIn });
 
     setStartTime = (startTime) => {
         this.setState({ startTime });
     }
 
-    signOut = () => {
-        this.reset();
-        firebase.auth().signOut().then(() => {
-            this.switchPage('welcome');
-            this.setWelcome('true');
-        });
+    setVideoURI = (finalVideoURI) => {
+        this.setState({ finalVideoURI });
     }
 
-    incrementCycle = () => {
-        this.setState({ cycle: this.state.cycle + 1 });
+    setMedia = (media) => {
+        this.setState({ media });
     }
 
-    loadMedia = (mediaItem) => {
-        this.setState({ media: [...this.state.media, mediaItem] });
+    loadMedia = (mediaItem, narration) => {
+        if (!narration) {
+            this.setState({ media: [...this.state.media, mediaItem] });
+        }
         this.setState({ uploading: true });
+        if (mediaItem.type === 'video') {
+            if (!this.state.minVideo) {
+                this.setState({ minVideo: true });
+            }
+        }
         console.log('setstate uploading true app.js');
 
         const data = new FormData();
@@ -97,11 +85,11 @@ export default class App extends Component {
         const body = data;
         const headers = {
             mediatype: mediaItem.type,
-            userid: this.user.uid,
+            userid: this.uid,
             startTime: this.state.startTime
         };
 
-        const fetchURL = `http://${this.host}/api/upload`;
+        const fetchURL = `${this.httpProtocol}${this.host}/api/upload`;
 
         fetch(fetchURL, {
             method: 'POST',
@@ -118,124 +106,121 @@ export default class App extends Component {
         });
     }
 
+    deleteMedia = (mediaItem) => {
+        console.log('called delete media from App');
+
+        const headers = {
+            filename: mediaItem.fileName,
+            mediatype: mediaItem.type,
+            userid: this.uid,
+            startTime: this.state.startTime
+        };
+
+        const fetchURL = `${this.httpProtocol}${this.host}/api/delete`;
+
+        fetch(fetchURL, {
+            method: 'GET',
+            headers
+        }).then(response => {
+            console.log('delete response', response);
+            if (!response.ok) {
+                console.log('bad connection');
+            }
+        }).catch(error => {
+            console.log('delete error', error);
+        });
+    }
+
     unloadMedia = () => {
         this.setState({ media: [] });
     }
 
-    loadCurrVideoLength = (currVideoLength) => {
-        this.setState({
-            currVideoLength: this.state.currVideoLength + currVideoLength
-        });
+    loadVideoInfo = (videoInfo) => {
+        this.setState({ videoInfo });
     }
 
     switchPage = (page) => {
-        this.setState({ collageView: page });
+        this.setState({ pageView: page });
     }
 
     reset = () => {
         this.setState({ currVideoLength: 0 });
-        this.navigationHistory = [];
-        this.setState({ cycle: 1 });
         this.unloadMedia();
     }
 
     navigate = (page) => {
-        if (page !== 'welcome') {
-            this.navigationHistory = [...this.navigationHistory || [], page];
-        }
-
         switch (page) {
             case 'welcome':
                 return <Welcome switchPage={this.switchPage} />;
-            case 'video':
-                return (<Video
-                    loadMedia={this.loadMedia}
+            case 'gather':
+                return (<Gather
                     switchPage={this.switchPage}
-                    navigationHistory={this.navigationHistory}
-                    currVideoLength={this.state.currVideoLength}
-                    setStartTime={this.setStartTime}
+                    loadMedia={this.loadMedia}
                     startTime={this.state.startTime}
-                    signOut={this.signOut}
+                    setStartTime={this.setStartTime}
+
                 />);
+            case 'create':
+                    return (<Create
+                        httpProtocol={this.httpProtocol}
+                        socketProtocol={this.socketProtocol}
+                        switchPage={this.switchPage}
+                        media={this.state.media}
+                        minVideo={this.state.minVideo}
+                        setMedia={this.setMedia}
+                        deleteMedia={this.deleteMedia}
+                        unloadMedia={this.unloadMedia}
+                        uid={this.uid}
+                        uploading={this.state.uploading}
+                        startTime={this.state.startTime}
+                        host={this.host}
+                        setVideoURI={this.setVideoURI}
+                        setMinVideo={this.setMinVideo}
+                    />);
+            case 'watch':
+                    return (<Watch
+                        httpProtocol={this.httpProtocol}
+                        socketProtocol={this.socketProtocol}
+                        switchPage={this.switchPage}
+                        loadMedia={this.loadMedia}
+                        finalVideoURI={this.state.finalVideoURI}
+                        startTime={this.state.startTime}
+                        host={this.host}
+                        uid={this.uid}
+                        setVideoURI={this.setVideoURI}
+
+                    />);
+
             case 'videocam' :
                 return (<Videocam
                     loadMedia={this.loadMedia}
-                    loadCurrVideoLength={this.loadCurrVideoLength}
-                    currVideoLength={this.state.currVideoLength}
                     switchPage={this.switchPage}
-                    setStartTime={this.setStartTime}
-                    startTime={this.state.startTime}
                 />);
-            case 'imagessounds':
-                return (<ImagesSounds
-                    loadMedia={this.loadMedia}
-                    switchPage={this.switchPage}
-                    setSoundFileName={this.setSoundFileName}
-                />);
-            case 'camera':
+
+            case 'camera' :
                 return (<Camera
                     loadMedia={this.loadMedia}
                     switchPage={this.switchPage}
                 />);
-            case 'camerarollviewer':
-                    return (<CameraRollViewer
-                        loadMedia={this.loadMedia}
-                        switchPage={this.switchPage}
-                    />);
 
             case 'soundrecording':
                 return (<SoundRecording
                     loadMedia={this.loadMedia}
                     switchPage={this.switchPage}
                 />);
-            case 'finalize':
-                return (<Finalize
-                    media={this.state.media}
-                    user={this.user}
-                    reset={this.reset}
+
+            default:
+                return (<Gather
                     switchPage={this.switchPage}
+                    loadMedia={this.loadMedia}
                     startTime={this.state.startTime}
-                    cycle={this.state.cycle}
-                    incrementCycle={this.incrementCycle}
-                    allowedCycles={this.allowedCycles}
-                    setWelcome={this.setWelcome}
-                    signOut={this.signOut}
-                    uploading={this.state.uploading}
-                    host={this.host}
-                    loadMedia={this.loadMedia}
-                />);
-            default:
-                return (<Video
-                    loadMedia={this.loadMedia}
-                    switchPage={this.switchPage}
+                    setStartTime={this.setStartTime}
+
                 />);
         }
     }
 
-    displayContent = () => {
-        switch (this.state.loggedIn) {
-            case true:
-                return this.navigate(this.state.collageView);
-            case false:
-                return (<Login
-                    setLogin={this.setLogin}
-                    reset={this.reset}
-                    initPage={this.state.collageView}
-                />);
-            default:
-                return (
-                <ImageBackground
-                    style={{ width: '100%', height: '100%' }}
-                    source={require('../img/collageart_splash4.jpg')}
-                >
-                    <View style={styles.fullCenteredView}>
-                        <ActivityIndicator size='large' />
-                    </View>
-                </ImageBackground>
-            );
-        }
-    }
-
+    displayContent = () => this.navigate(this.state.pageView);
     render() {
         return (
             <View style={styles.fullCenteredView}>

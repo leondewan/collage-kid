@@ -49,34 +49,34 @@ class Video extends Component {
     }
 
     renderBottomNav = () => {
-        const navHistory = this.props.navigationHistory;
-        if (!navHistory.every((val) => val === 'video' || val === 'videocam')) {
-            return (
-                <View style={styles.navContainer}>
-                    <TouchableOpacity
-                        onPress={() => this.props.switchPage('imagessounds')}
-                    >
-                        <Text style={styles.navText}> &lt; More Images/Sounds </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => this.props.switchPage('finalize')}
-                    >
-                        <Text style={styles.navText}> Finalize &gt; </Text>
-                    </TouchableOpacity>
-                </View>
-            );
-        } else if (navHistory.length > 1 || navHistory.lenth === 0) {
-            return (
-                <View style={{ ...styles.navContainer, justifyContent: 'center' }}>
-                    <TouchableOpacity
-                        onPress={() => this.props.switchPage('imagessounds')}
-                    >
-                        <Text style={styles.navText}> Proceed &gt; </Text>
-                    </ TouchableOpacity>
-                </View>
-            );
-        }
+        // const navHistory = this.props.navigationHistory;
+        // if (!navHistory.every((val) => val === 'video' || val === 'videocam')) {
+        //     return (
+        //         <View style={styles.navContainer}>
+        //             <TouchableOpacity
+        //                 onPress={() => this.props.switchPage('imagessounds')}
+        //             >
+        //                 <Text style={styles.navText}> &lt; More Images/Sounds </Text>
+        //             </TouchableOpacity>
+        //
+        //             <TouchableOpacity
+        //                 onPress={() => this.props.switchPage('finalize')}
+        //             >
+        //                 <Text style={styles.navText}> Finalize &gt; </Text>
+        //             </TouchableOpacity>
+        //         </View>
+        //     );
+        // } else if (navHistory.length > 1 || navHistory.lenth === 0) {
+        //     return (
+        //         <View style={{ ...styles.navContainer, justifyContent: 'center' }}>
+        //             <TouchableOpacity
+        //                 onPress={() => this.props.switchPage('imagessounds')}
+        //             >
+        //                 <Text style={styles.navText}> Proceed &gt; </Text>
+        //             </ TouchableOpacity>
+        //         </View>
+        //     );
+        // }
         return (
             <View style={{ ...styles.navContainer, justifyContent: 'center' }}>
                 <TouchableOpacity

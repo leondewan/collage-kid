@@ -17,7 +17,7 @@ export const styles = StyleSheet.create({
     buttonText: {
         fontSize: 20,
         fontFamily: 'PT Sans',
-        color: '#dbeeff'
+        color: '#fff'
     },
 
     container: {
@@ -41,13 +41,13 @@ export const styles = StyleSheet.create({
     },
 
     header: {
-        backgroundColor: '#011222',
+        backgroundColor: '#0d1e33',
         paddingTop: 22,
         paddingBottom: 0,
         justifyContent: 'flex-end',
         alignItems: 'center',
         width: win.width,
-        height: win.width * 0.31
+        height: win.width * 0.26
     },
 
     headerAlt: {
@@ -63,8 +63,20 @@ export const styles = StyleSheet.create({
         flex: 1,
         alignSelf: 'stretch',
         width: win.width,
-        height: win.width * 0.26,
+        height: win.width * 0.25,
         resizeMode: 'contain'
+    },
+
+    iconHolder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80
+
+    },
+
+    icon: {
+        width: 30,
+        height: 30
     },
 
     imageBG: {
@@ -80,8 +92,8 @@ export const styles = StyleSheet.create({
     },
 
     instructions: {
-        color: '#cfe7fd',
-        fontSize: 22,
+        color: '#fff',
+        fontSize: 20,
         fontFamily: 'PT Sans',
         paddingLeft: 40,
         paddingRight: 40,
@@ -102,22 +114,26 @@ export const styles = StyleSheet.create({
     },
 
     navContainer: {
-        borderTopColor: '#000',
-        borderTopWidth: 1,
-        backgroundColor: '#011222',
+        // borderTopColor: '#011222',
+        // borderTopWidth: 3,
+        // borderBottomColor: '#011222',
+        // borderBottomWidth: 3,
+        borderColor: '#0d1e33',
+        borderWidth: 5,
+        //backgroundColor: '#011a21',
+        backgroundColor: '#1a2f65',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingLeft: 15,
-        paddingRight: 15,
-        height: 45,
+        height: 80,
         alignSelf: 'stretch'
     },
 
     navText: {
-        fontSize: 18,
+        fontSize: 14,
         fontFamily: 'PT Sans',
-        color: '#cfe7fd'
+        color: '#fff',
+        paddingTop: 5
     },
 
     navTextDisabled: {
@@ -126,8 +142,19 @@ export const styles = StyleSheet.create({
         color: '#333'
     },
 
+    previewIcons: {
+        width: ((win.width - 40) / 3) - 10,
+        height: ((win.width - 40) / 3) - 10,
+        margin: 5
+    },
+
+    previewIconHolders: {
+        width: ((win.width - 40) / 3),
+        height: ((win.width - 40) / 3)
+    },
+
     textInput: {
-        color: '#cfe7fd',
+        color: '#fff',
         fontSize: 20,
         fontFamily: 'PT Sans',
         width: 250,
@@ -153,13 +180,13 @@ export const styles = StyleSheet.create({
     utilButtonText: {
         fontSize: 16,
         fontFamily: 'PT Sans',
-        color: '#f2fffc'
+        color: '#fff'
     },
 
     utilContainer: {
         flex: 1,
         justifyContent: 'flex-end',
-        alignItems: 'stretch',
+        alignItems: 'center',
         alignSelf: 'stretch',
         backgroundColor: '#000'
     },
@@ -168,7 +195,7 @@ export const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'PT Sans',
         paddingTop: 15,
-        color: '#cfe7fd',
+        color: '#fff',
         paddingLeft: 15,
         paddingRight: 15,
         alignSelf: 'stretch'
