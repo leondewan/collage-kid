@@ -59,8 +59,7 @@ function editMedia(req, ws){
         return new Promise((resolve, reject) => {
             const marketSymbols = ['%5EIXIC', '%5EDJI', 'GOOG', 'FB', 'AMZN'];
             marketIDX = 0;
-
-            var gatherWeatherData = (lat, long) => {
+            var gatherWeatherData = (lat = 40.7484445, long = -73.9878531) => {
                 weatherURL = `https://api.darksky.net/forecast/${crypt.darksky}/${lat},${long}`;
                 axios.get(weatherURL)
                     .then(response => {
@@ -105,10 +104,12 @@ function editMedia(req, ws){
         })
     }
 
-    var calculateHeavenlyArray = (lat, long) => {
+    var calculateHeavenlyArray = (lat = 40.7484445, long = -73.9878531) => {
+        console.log('latitude', lat, 'longitude', long);
         const ephemeris = require('ephemeris');
         const Moment = require('moment-timezone');
 
+        //var now = new Date(1554126056000);
         var now = new Date();
 
         var zeroAdder = num => (num > 9 ? num: '0' + num);
@@ -116,7 +117,9 @@ function editMedia(req, ws){
         var dateString = `${zeroAdder(now.getDate())}.${zeroAdder(now.getMonth())}.${now.getFullYear()} ${zeroAdder(now.getHours())}:${zeroAdder(now.getMinutes())}:${zeroAdder(now.getSeconds())}`;
 
         const dateObj = new Moment.tz(dateString, 'DD.MM.YYYY HH:mm:ss', 'UTC');
+        console.log('dateObj', dateObj);
         var result = ephemeris.getAllPlanets(dateObj, lat, long, 0);
+        console.log('ephemeris result', result);
         const { moon, mars, venus, jupiter, mercury, saturn, sun } = result.observed;
 
         heavenlyArray = [
@@ -128,7 +131,7 @@ function editMedia(req, ws){
             saturn.apparentLongitudeDd,
             sun.apparentLongitudeDd
         ];
-
+        console.log('heavenly array', heavenlyArray);
         return heavenlyArray;
     }
 

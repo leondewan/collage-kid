@@ -69,9 +69,7 @@ export const styles = StyleSheet.create({
 
     iconHolder: {
         justifyContent: 'center',
-        alignItems: 'center',
-        width: 80
-
+        alignItems: 'center'
     },
 
     icon: {
@@ -89,30 +87,19 @@ export const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        alignSelf: 'stretch'
+
     },
 
     instructions: {
         color: '#fff',
-        fontSize: 20,
+        fontSize: 18,
         fontFamily: 'PT Sans',
         paddingLeft: 40,
         paddingRight: 40,
-        textAlign: 'center'
+        alignSelf: 'stretch'
     },
-
-    loginForm: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        paddingLeft: 40,
-        paddingRight: 40,
-        paddingBottom: 20,
-        paddingTop: 20,
-        marginTop: 40,
-        marginBottom: 40
-    },
-
+    
     navContainer: {
         // borderTopColor: '#011222',
         // borderTopWidth: 3,
@@ -126,7 +113,9 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         height: 80,
-        alignSelf: 'stretch'
+        alignSelf: 'stretch',
+        paddingLeft: 15,
+        paddingRight: 15
     },
 
     navText: {

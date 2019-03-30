@@ -110,7 +110,7 @@ export default class SoundRecording extends Component {
                         }}
                     >
                         <Text
-                            style={{ ...styles.instructions, fontSize: 16 }}
+                            style={{ ...styles.instructions, fontSize: 16, textAlign: 'center' }}
                         >{convertToHMS(this.state.runtime)}</Text>
                     </View>
                     <View style={styles.utilContainer}>

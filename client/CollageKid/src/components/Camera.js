@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import { Text, TouchableOpacity, View, Dimensions, StatusBar, Image} from 'react-native';
+import { Text, TouchableOpacity, View, Dimensions, StatusBar, Image } from 'react-native';
 import { RNCamera } from 'react-native-camera';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { styles } from './CollageStyles';
 import CollageFadeTransition from './CollageFadeTransition';
@@ -53,14 +52,14 @@ class Camera extends Component {
                             justifyContent: 'space-between',
                             alignSelf: 'stretch',
                             alignItems: 'center',
-                            paddingRight: 25,
                             paddingTop: 20,
+                            paddingRight: 20,
                             paddingBottom: 20
                         }}
                     >
                         <TouchableOpacity
                             onPress={() => this.setState({ back: !this.state.back })}
-                            style={{ ...styles.iconHolder }}
+                            style={{ ...styles.iconHolder, width: 80 }}
                         >
                             <Image
                                 source={require('../img/icon_flipcamera.png')}
@@ -90,7 +89,7 @@ class Camera extends Component {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => this.props.switchPage('gather')}
-                            style={{ marginTop: 10 }}
+                            style={{ marginTop: 10, width: 60, alignItems: 'flex-end' }}
                         >
                             <Text
                                 style={{ color: '#f2fffc', fontSize: 18 }}

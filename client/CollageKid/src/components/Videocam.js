@@ -150,7 +150,7 @@ class Videocam extends Component {
                         }}
                     >
                         <Text
-                            style={{ ...styles.instructions, fontSize: 16 }}
+                            style={{ ...styles.instructions, fontSize: 16, textAlign: 'center' }}
                         >{this.state.maxTime
                             ? 'Video limit reached'
                             : convertToHMS(this.state.runtime)}</Text>

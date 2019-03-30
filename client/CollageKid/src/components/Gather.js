@@ -92,22 +92,22 @@ class Gather extends Component {
                     colors={['#1a2f65', '#100200']}
                     //colors={['#013c4b', '#100200']}
                     stops={[0.3, 1]}
-                    radius={win.width * 0.7}
+                    radius={win.width * 0.8}
+                    //tcenter={[win.width / 2, win.height / 3]}
                 >
                     <View style={styles.container}>
                         {this.state.about
                             ? (<ScrollView contentContainerStyle={{ flexGrow: 1, alignSelf: 'stretch', alignItems: 'center' }}>
-                                <Text style={{ ...styles.instructions, fontSize: 16, paddingTop: 20, textAlign: 'left' }}>
+                                <Text style={{ ...styles.instructions, fontSize: 16, paddingTop: 20 }}>
                                     Collage Kid Experimental Filmmaker is designed to help you create video art
-                                    pieces from whatever's around you.  After you have gathered video, images, and sounds,
-                                    Filmmaker will create and execute edits based on weather, stock market, and
-                                    planetary alignment data. While at times chaotic, the results are not random.
+                                    pieces from what you discover around you.  After you have gathered video, images, and sounds,
+                                    Experimental Filmmaker will create and execute edits based on weather, stock market, and
+                                    planetary alignment data. While at times chaotic, the results are technically not random.
                                 </Text>
-                                <Text style={{ ...styles.instructions, fontSize: 16, paddingTop: 20, textAlign: 'left' }}>
+                                <Text style={{ ...styles.instructions, fontSize: 16, paddingTop: 20 }}>
                                     Generatd films can be cycled through the editor any number of times along with whatever combination
-                                    of previous results and original media you desire.  This allows you to exploit the
-                                     butterfly-effect interconnectedness of everything for the entertainment and philosophical enrichment
-                                    of yourself and those around you while also creating intriguing and unexpected content.
+                                    of previous results and gathered media you desire.  The narration feature allows you to layer an unlimitd number of sound recordings in your piece, which can then be re-edited
+                                    as many times as you like.  This workflow allows you to recursively shape the feel and texture of your piece while at the same time generating fresh, surprising results every pass through the editor.
 
                                 </Text>
                                 <TouchableOpacity
@@ -129,16 +129,10 @@ class Gather extends Component {
                             </ScrollView>)
 
                             : (<View style={styles.instructionsContainer}>
-                            <Text style={styles.instructions}>
-                                Start making your experimental film by gathering
-                                media: capturing video, taking pictures, recording sounds.
-                                When you have gathered enough, tap Create.
-                            </Text>
-                            <Text style={{ ...styles.instructions, fontSize: 16, paddingTop: 20 }}>
-                                It's best not to load videos that are
-                                much longer than 3 minutes. The more media you use, the longer
-                                it will take for your film to process. You will need at least 3 seconds of
-                                video in order to make your film.
+                            <Text style={{ ...styles.instructions, fontSize: 20, textAlign: 'center' }}>
+                                Start making your{'\n'}experimental film by capturing{'\n'} video, taking pictures, and{'\n'} recording sounds.</Text>
+                            <Text style={{ ...styles.instructions, paddingTop: 20, fontSize: 20, textAlign: 'center' }}>
+                                When you have gathered{'\n'} enough, tap Create.
                             </Text>
                         </View>)}
                     </View>
@@ -156,7 +150,7 @@ class Gather extends Component {
                         />
                         <Text style={this.state.about
                             ? { ...styles.navText, color: '#00fafd'}
-                            : styles.navText}>Grok</Text>
+                            : styles.navText}>Learn</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.iconHolder}

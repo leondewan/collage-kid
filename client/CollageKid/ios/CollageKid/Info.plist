@@ -17,11 +17,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.3</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>4</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -39,10 +39,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Collage Kid would like to use your camera so you can create your collage.</string>
-	<key>NSLocationUsageDescription</key>
-	<string>You will need to provide your location in order to proceed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
+	<string>Collage kid will need your location in order to edit your video.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Collage Kid would like to use your microphone so that your collage can have sound.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

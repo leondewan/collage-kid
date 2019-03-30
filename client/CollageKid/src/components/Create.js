@@ -38,6 +38,7 @@ class Create extends Component {
     componentDidMount() {
         this.setState({ minVideo: this.props.minVideo });
         this.empireState = false;
+        debugger;
         navigator.geolocation.getCurrentPosition((result) => {
             const { latitude, longitude } = result.coords;
             this.setState({ latitude, longitude });
@@ -84,6 +85,7 @@ class Create extends Component {
     }
 
     deleteMedia = () => {
+        this.setState({ viewingMedia: false });
         console.log('called delete media from create');
         const media = this.state.media;
         const selectedIndex = this.state.selectedMedia;
@@ -198,7 +200,7 @@ class Create extends Component {
                         justifyContent: 'center',
                         padding: 10,
                         borderWidth: 1,
-                        borderColor: '#013c4b',
+                        borderColor: '#9db6f6',
                         borderRadius: 5
                     }}
                 >
@@ -303,7 +305,7 @@ class Create extends Component {
             type: 'edit',
             headers: {
                 host: this.props.host,
-                userid: this.userId,
+                userid: this.props.uid,
                 latitude: this.state.latitude,
                 longitude: this.state.longitude,
                 starttime: this.props.startTime,
@@ -373,7 +375,7 @@ class Create extends Component {
     }
 
     reset = () => {
-        this.props.unloadMedia();
+        this.props.reset();
         RNFS.exists(`${RNFS.CachesDirectoryPath}/SoundRecorder`)
             .then((exists) => {
                 if (exists) {
@@ -382,7 +384,12 @@ class Create extends Component {
                 return true;
                 })
             .then(() => {
-                RNFS.unlink(`${RNFS.CachesDirectoryPath}/Camera`);
+                RNFS.exists(`${RNFS.CachesDirectoryPath}/Camera`)
+                .then(exists => {
+                    if (exists) {
+                        RNFS.unlink(`${RNFS.CachesDirectoryPath}/Camera`);
+                    }
+                });
                 return true;
             })
             .catch((err) => console.log('error deleting files from phone', err));
@@ -397,19 +404,22 @@ class Create extends Component {
                     style={{ flex: 1, alignSelf: 'stretch' }}
                     colors={['#1a2f65', '#100200']}
                     stops={[0.3, 1]}
-                    radius={win.width * 0.7}
+                    radius={win.width * 0.8}
                 >
                 <View style={styles.container}>
                     {{
                         intro: (<View style={styles.instructionsContainer}>
-                            <Text style={{ ...styles.instructions, fontSize: 20 }}>
-                                Preview your media before creating your experimental film - you
-                                can remove items, or go back and add more. Tap Edit to start
-                                the finalizing and editing of your media. You can add the
-                                edited results to your media bin by tapping Recycle.
-                                Once you are happy with your piece, you can save and share.
-                                Tap the Reset button to begin a new film.
-                            </Text>
+                            <Text style={styles.instructions}>
+                            Tap Media to open media bin and preview gathered
+                            media before creating your experimental film.</Text>
+
+                            <Text style={{ ...styles.instructions, paddingTop: 20 }}>Tap Edit to set paramaters and start
+                            the editing and finalizing of your film.</Text>
+
+                            <Text style={{ ...styles.instructions, paddingTop: 20 }}>Tap Watch to return to last edited film (tapping prior to having edited a film will reveal Watch page instructions.)</Text>
+
+                            <Text style={{ ...styles.instructions, paddingTop: 20 }}>Tap Reset to empty media bin
+                            and start a new film.</Text>
 
                         </View>),
 
@@ -504,6 +514,7 @@ class Create extends Component {
                                     style={{
                                     ...styles.instructions,
                                     fontWeight: 'bold',
+                                    textAlign: 'center',
                                     paddingTop: 30
 
                                  }}
@@ -512,6 +523,7 @@ class Create extends Component {
                                 </Text>
                                 <Text
                                     style={{ ...styles.instructions,
+                                        textAlign: 'center',
                                         paddingTop: 20,
                                         paddingBottom: 40 }}
                                 >Choosing a short duration

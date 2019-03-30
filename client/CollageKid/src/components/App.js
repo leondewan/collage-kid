@@ -2,7 +2,6 @@
 import React, { Component } from 'react';
 import { View, AsyncStorage, Platform } from 'react-native';
 
-import Welcome from './Welcome';
 import Gather from './Gather';
 import Create from './Create';
 import Watch from './Watch';
@@ -23,7 +22,7 @@ export default class App extends Component {
     };
 
     componentDidMount() {
-        //this.host = '192.168.1.3:3001';
+        //this.host = '192.168.1.2:3001';
         this.host = 'collagekid.com/collageserver/';
 
         //this.httpProtocol = 'http://';
@@ -144,14 +143,12 @@ export default class App extends Component {
     }
 
     reset = () => {
-        this.setState({ currVideoLength: 0 });
+        this.setState({ minVideo: false })
         this.unloadMedia();
     }
 
     navigate = (page) => {
         switch (page) {
-            case 'welcome':
-                return <Welcome switchPage={this.switchPage} />;
             case 'gather':
                 return (<Gather
                     switchPage={this.switchPage}
@@ -169,7 +166,7 @@ export default class App extends Component {
                         minVideo={this.state.minVideo}
                         setMedia={this.setMedia}
                         deleteMedia={this.deleteMedia}
-                        unloadMedia={this.unloadMedia}
+                        reset={this.reset}
                         uid={this.uid}
                         uploading={this.state.uploading}
                         startTime={this.state.startTime}

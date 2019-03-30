@@ -50,7 +50,7 @@ exports.concatMedia = () => {
         var mediaPath = `${mediaFilePath}/${mediaType}${scaled ? '_scaled' : ''}/`
         var mediaList = mediaConcat.map((mediaClip) => `file ${mediaClip}`).join('\n');
 
-        fs.writeFileSync(`${mediaPath}concatList.txt`, mediaList);
+        fs.writeFileSync(`${mediaFilePath}/${mediaType}ConcatList.txt`, mediaList);
 
         let ffmpeg = spawn('ffmpeg', [
             '-y',
@@ -59,7 +59,7 @@ exports.concatMedia = () => {
             '-safe',
             '0',
             '-i',
-            `${mediaPath}/concatList.txt`,
+            `${mediaFilePath}/${mediaType}ConcatList.txt`,
             '-c',
             'copy',
             `${mediaFilePath}/concat${mediaType}.${fileExtension}`

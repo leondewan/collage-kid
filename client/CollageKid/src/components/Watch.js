@@ -98,7 +98,7 @@ class Watch extends Component {
                     style={{ flex: 1, alignSelf: 'stretch' }}
                     colors={['#1a2f65', '#100200']}
                     stops={[0.3, 1]}
-                    radius={win.width * 0.7}
+                    radius={win.width * 0.8}
                 >
                     <View
                         style={{ flex: 1,
@@ -120,12 +120,16 @@ class Watch extends Component {
                                     alignSelf: 'stretch' }}
                         />),
 
-                            futureFilm: (<Text style={styles.instructions} >
-                                    Tap Recycle to add the film that will appear in this space to your media bin. Tap
+                            futureFilm: (<View style={styles.instructionsContainer}>
+                                <Text style={styles.instructions} >
+                                    Tap Recycle to add the film that will appear in this space to your media bin.</Text>
+
+                                <Text style={{ ...styles.instructions, paddingTop: 20 }} >Tap
                                     Narrate to add sound to your film - you can
-                                    overlay an unlimited number of tracks.  Tapping Gather will
-                                    take you back to the media capture page.
-                            </Text>),
+                                    overlay an unlimited number of tracks.</Text>
+
+                                <Text style={{ ...styles.instructions, paddingTop: 20 }} >Tap Gather to gather more media for the next iteration.</Text>
+                            </View>),
                             narrate: (<Narration
                                     httpProtocol={this.props.httpProtocol}
                                     socketProtocol={this.props.socketProtocol}
